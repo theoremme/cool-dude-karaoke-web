@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Karaoke Room App - Backend Server",
   "main": "server.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js"

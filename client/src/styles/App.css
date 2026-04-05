@@ -1431,9 +1431,12 @@ body {
 .auth-card h2,
 .lobby-card h2,
 .join-card h2 {
-  font-size: 22px;
-  color: #00c8ff;
-  text-shadow: 0 0 10px rgba(0, 200, 255, 0.5);
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  color: #9d00ff;
+  text-shadow: 0 0 10px rgba(157, 0, 255, 0.5);
   text-align: center;
   margin-bottom: 24px;
 }
@@ -1940,7 +1943,7 @@ body {
 }
 
 .closeout-publish-success p {
-  color: #00ff88 !important;
+  color: #CFF527 !important;
   margin-bottom: 12px;
 }
 

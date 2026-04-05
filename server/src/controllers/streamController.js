@@ -3,7 +3,7 @@ const https = require('https');
 const http = require('http');
 const { URL } = require('url');
 
-const YT_DLP_PATH = process.env.YT_DLP_PATH || 'C:/Users/Lucy/AppData/Roaming/Python/Python312/Scripts/yt-dlp.exe';
+const YT_DLP_PATH = process.env.YT_DLP_PATH || 'yt-dlp';
 
 // Cache extracted URLs (they last 4-6 hours)
 const urlCache = new Map();
