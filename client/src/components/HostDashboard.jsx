@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= breakpoint);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= breakpoint);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [breakpoint]);
+  return isMobile;
+}
 import SearchBar from './SearchBar';
 import SearchResults from './SearchResults';
 import VibeSuggestions from './VibeSuggestions';
@@ -25,7 +35,9 @@ const HostDashboard = () => {
   const { socket, isConnected } = useSocket();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { connectSocket, setPlaylist, items } = usePlaylist();
+  const { connectSocket, setPlaylist, items, currentItem } = usePlaylist();
+  const isMobile = useIsMobile();
+  const [showMobileWarning, setShowMobileWarning] = useState(true);
 
   const savedState = loadHostState(inviteCode);
   const [room, setRoom] = useState(null);
@@ -174,6 +186,69 @@ const HostDashboard = () => {
       setTimeout(() => setCopied(false), 2000);
     });
   };
+
+  if (isMobile) {
+    return (
+      <div className="app app-page">
+        {showMobileWarning && (
+          <div className="mobile-warning-overlay">
+            <div className="mobile-warning-card">
+              <img src={logo} alt="Cool Dude Karaoke" className="auth-logo" />
+              <h2>Yo, dude. This hits different on desktop.</h2>
+              <p>The host dashboard is designed for a big screen. You can still use it here, but it's way better on a laptop or desktop.</p>
+              <button className="btn-neon" onClick={() => setShowMobileWarning(false)}>
+                I'll rough it
+              </button>
+            </div>
+          </div>
+        )}
+        <div className="guest-view">
+          <div className="guest-header">
+            <img src={logo} alt="Cool Dude Karaoke" style={{ height: 180, marginBottom: 8 }} />
+            <h2>{room?.name}</h2>
+            <button className="btn-leave-room" style={{ position: 'static', marginTop: 8 }} onClick={handleLeaveRoom}>
+              Leave Room
+            </button>
+          </div>
+
+          {currentItem && (
+            <div className="guest-now-playing">
+              <div className="now-playing-label">NOW PLAYING</div>
+              <div className="now-playing-title">{currentItem.title}</div>
+              <div className="now-playing-channel">{currentItem.channelName}</div>
+            </div>
+          )}
+
+          <PlaylistQueue />
+
+          <div className="search-section">
+            <SearchBar
+              onSearch={handleSearch}
+              onVibe={handleVibe}
+              loading={loading}
+              vibeLoading={vibeLoading}
+            />
+            {error && <div className="error-message">{error}</div>}
+            {loading && <div className="loading">Searching...</div>}
+            {vibeLoading && (
+              <div className="loading">
+                ✦ Generating "{vibeTheme}" playlist...
+              </div>
+            )}
+            {vibeSuggestions.length > 0 && (
+              <VibeSuggestions
+                theme={vibeTheme}
+                suggestions={vibeSuggestions}
+                onRequestMore={handleRequestMore}
+                loadingMore={loadingMore}
+              />
+            )}
+            <SearchResults results={results} />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app host-dashboard">

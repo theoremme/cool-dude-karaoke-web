@@ -22,11 +22,22 @@ const POPOUT_HTML = (videoSrc, title) => `<!DOCTYPE html>
       video.src = e.data.src;
       document.title = e.data.title;
       video.load();
+      if (e.data.startTime) {
+        video.addEventListener('canplay', function seek() {
+          video.currentTime = e.data.startTime;
+          video.removeEventListener('canplay', seek);
+        });
+      }
     }
     if (e.data.type === 'popout-play-cmd') video.play();
     if (e.data.type === 'popout-pause-cmd') video.pause();
+    if (e.data.type === 'popout-get-time') {
+      window.opener?.postMessage({ type: 'popout-time', currentTime: video.currentTime }, '*');
+    }
   });
-  window.onbeforeunload = () => window.opener?.postMessage({ type: 'popout-closed' }, '*');
+  window.onbeforeunload = () => {
+    window.opener?.postMessage({ type: 'popout-closed', currentTime: video.currentTime }, '*');
+  };
 </script>
 </body></html>`;
 
@@ -34,6 +45,7 @@ const VideoPlayer = ({ isHost = false }) => {
   const { currentItem, isPlaying, playNext, setPlaying } = usePlaylist();
   const videoRef = useRef(null);
   const popoutRef = useRef(null);
+  const popoutTimeRef = useRef(0);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [poppedOut, setPoppedOut] = useState(false);
@@ -55,7 +67,11 @@ const VideoPlayer = ({ isHost = false }) => {
         case 'popout-error':
           setError('Playback error in popout window.');
           break;
+        case 'popout-time':
+          popoutTimeRef.current = e.data.currentTime || 0;
+          break;
         case 'popout-closed':
+          popoutTimeRef.current = e.data.currentTime || 0;
           setPoppedOut(false);
           popoutRef.current = null;
           break;
@@ -121,6 +137,10 @@ const VideoPlayer = ({ isHost = false }) => {
 
   const handleCanPlay = () => {
     setLoading(false);
+    if (videoRef.current && popoutTimeRef.current > 0) {
+      videoRef.current.currentTime = popoutTimeRef.current;
+      popoutTimeRef.current = 0;
+    }
     if (isPlaying && videoRef.current) {
       videoRef.current.play().catch(() => {});
     }
@@ -144,6 +164,9 @@ const VideoPlayer = ({ isHost = false }) => {
   const handlePopout = useCallback(() => {
     if (!currentItem) return;
 
+    // Capture current time from inline player before popping out
+    const startTime = videoRef.current?.currentTime || 0;
+
     const videoSrc = `/api/stream/${currentItem.videoId}`;
     const html = POPOUT_HTML(videoSrc, currentItem.title);
 
@@ -158,6 +181,16 @@ const VideoPlayer = ({ isHost = false }) => {
     popoutRef.current = popup;
     setPoppedOut(true);
 
+    // Send the start time to the popout once it's ready
+    setTimeout(() => {
+      popup.postMessage({
+        type: 'popout-load',
+        src: videoSrc,
+        title: currentItem.title,
+        startTime,
+      }, '*');
+    }, 500);
+
     // Pause inline video
     if (videoRef.current) {
       videoRef.current.pause();
@@ -166,11 +199,21 @@ const VideoPlayer = ({ isHost = false }) => {
   }, [currentItem]);
 
   const handlePopback = useCallback(() => {
+    // Request final time from popout before closing
     if (popoutRef.current && !popoutRef.current.closed) {
-      popoutRef.current.close();
+      popoutRef.current.postMessage({ type: 'popout-get-time' }, '*');
+      // Small delay to receive the time response before closing
+      setTimeout(() => {
+        if (popoutRef.current && !popoutRef.current.closed) {
+          popoutRef.current.close();
+        }
+        popoutRef.current = null;
+        setPoppedOut(false);
+      }, 100);
+    } else {
+      popoutRef.current = null;
+      setPoppedOut(false);
     }
-    popoutRef.current = null;
-    setPoppedOut(false);
   }, []);
 
   if (!currentItem) {
