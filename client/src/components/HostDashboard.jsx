@@ -106,9 +106,10 @@ const HostDashboard = () => {
     };
   }, [socket, setPlaylist]);
 
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+
   const handleLeaveRoom = () => {
     if (!socket || !room) return;
-    // Save playlist to sessionStorage for the closeout page
     sessionStorage.setItem(`karaoke-closeout-${inviteCode}`, JSON.stringify({
       roomName: room.name,
       playlist: items,
@@ -190,6 +191,18 @@ const HostDashboard = () => {
   if (isMobile) {
     return (
       <div className="app app-page">
+        {showLeaveModal && (
+          <div className="mobile-warning-overlay">
+            <div className="mobile-warning-card">
+              <h2>Callin' it quits?</h2>
+              <p>This will end the room for everyone. Guests will be kicked out and the session will close.</p>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+                <button className="btn-neon" onClick={handleLeaveRoom}>End Session</button>
+                <button className="btn-neon" style={{ borderColor: '#555', color: '#888' }} onClick={() => setShowLeaveModal(false)}>Keep Going</button>
+              </div>
+            </div>
+          </div>
+        )}
         {showMobileWarning && (
           <div className="mobile-warning-overlay">
             <div className="mobile-warning-card">
@@ -206,7 +219,7 @@ const HostDashboard = () => {
           <div className="guest-header">
             <img src={logo} alt="Cool Dude Karaoke" style={{ height: 180, marginBottom: 8 }} />
             <h2>{room?.name}</h2>
-            <button className="btn-leave-room" style={{ position: 'static', marginTop: 8 }} onClick={handleLeaveRoom}>
+            <button className="btn-leave-room" style={{ position: 'static', marginTop: 8 }} onClick={() => setShowLeaveModal(true)}>
               Leave Room
             </button>
           </div>
@@ -254,9 +267,21 @@ const HostDashboard = () => {
 
   return (
     <div className="app host-dashboard">
+      {showLeaveModal && (
+        <div className="mobile-warning-overlay">
+          <div className="mobile-warning-card">
+            <h2>Callin' it quits?</h2>
+            <p>This will end the room for everyone. Guests will be kicked out and the session will close.</p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button className="btn-neon" onClick={handleLeaveRoom}>End Session</button>
+              <button className="btn-neon" style={{ borderColor: '#555', color: '#888' }} onClick={() => setShowLeaveModal(false)}>Keep Going</button>
+            </div>
+          </div>
+        </div>
+      )}
       <header className="app-header">
         <img src={logo} alt="Cool Dude Karaoke" className="app-logo host-logo" style={{ height: 240 }} />
-        <button className="btn-leave-room" onClick={handleLeaveRoom}>
+        <button className="btn-leave-room" onClick={() => setShowLeaveModal(true)}>
           Leave Room
         </button>
       </header>
