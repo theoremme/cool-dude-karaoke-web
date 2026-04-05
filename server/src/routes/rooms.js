@@ -1,6 +1,6 @@
 const express = require('express');
 const { body } = require('express-validator');
-const { createRoom, getRoomByInviteCode, updateRoom, deleteRoom } = require('../controllers/roomController');
+const { createRoom, getRoomByInviteCode, updateRoom, deleteRoom, getMyRooms } = require('../controllers/roomController');
 const { authenticate } = require('../middleware/auth');
 const playlistRouter = require('./playlist');
 
@@ -13,6 +13,7 @@ router.post(
   createRoom
 );
 
+router.get('/mine', authenticate, getMyRooms);
 router.get('/:inviteCode', getRoomByInviteCode);
 
 router.patch(

@@ -133,4 +133,24 @@ const deleteRoom = async (req, res) => {
   }
 };
 
-module.exports = { createRoom, getRoomByInviteCode, updateRoom, deleteRoom };
+const getMyRooms = async (req, res) => {
+  try {
+    const rooms = await prisma.room.findMany({
+      where: {
+        hostId: req.userId,
+        isActive: true,
+      },
+      include: {
+        _count: { select: { playlist: true, members: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json({ rooms });
+  } catch (err) {
+    console.error('GetMyRooms error:', err);
+    res.status(500).json({ error: 'Failed to get rooms' });
+  }
+};
+
+module.exports = { createRoom, getRoomByInviteCode, updateRoom, deleteRoom, getMyRooms };

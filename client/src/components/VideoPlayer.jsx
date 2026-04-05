@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { usePlaylist } from '../contexts/PlaylistContext';
 
-const POPOUT_HTML = (videoSrc, title) => `<!DOCTYPE html>
+const POPOUT_HTML = (title) => `<!DOCTYPE html>
 <html><head>
 <title>${title.replace(/"/g, '&quot;')}</title>
 <style>
@@ -10,7 +10,7 @@ const POPOUT_HTML = (videoSrc, title) => `<!DOCTYPE html>
   video { width: 100vw; height: 100vh; object-fit: contain; }
 </style>
 </head><body>
-<video id="v" src="${videoSrc}" autoplay controls></video>
+<video id="v" autoplay controls></video>
 <script>
   const video = document.getElementById('v');
   video.onended = () => window.opener?.postMessage({ type: 'popout-ended' }, '*');
@@ -168,7 +168,7 @@ const VideoPlayer = ({ isHost = false }) => {
     const startTime = videoRef.current?.currentTime || 0;
 
     const videoSrc = `/api/stream/${currentItem.videoId}`;
-    const html = POPOUT_HTML(videoSrc, currentItem.title);
+    const html = POPOUT_HTML(currentItem.title);
 
     const popup = window.open('', 'karaoke-popout', 'width=960,height=540,resizable=yes');
     if (!popup) {
@@ -181,7 +181,7 @@ const VideoPlayer = ({ isHost = false }) => {
     popoutRef.current = popup;
     setPoppedOut(true);
 
-    // Send the start time to the popout once it's ready
+    // Send the video source and start time once the popout is ready
     setTimeout(() => {
       popup.postMessage({
         type: 'popout-load',

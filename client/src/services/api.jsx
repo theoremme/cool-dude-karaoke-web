@@ -57,6 +57,12 @@ export const getRoomByInviteCode = async (inviteCode) => {
   return data;
 };
 
+export const getMyRooms = async () => {
+  const res = await fetch('/api/rooms/mine', { headers: authHeaders() });
+  if (!res.ok) return { rooms: [] };
+  return res.json();
+};
+
 export const searchYouTube = async (query) => {
   const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`);
   if (!res.ok) throw new Error('Search failed');

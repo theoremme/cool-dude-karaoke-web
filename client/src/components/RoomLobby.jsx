@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import * as api from '../services/api';
@@ -11,6 +11,11 @@ const RoomLobby = () => {
   const [joinCode, setJoinCode] = useState('');
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState(null);
+  const [activeRooms, setActiveRooms] = useState([]);
+
+  useEffect(() => {
+    api.getMyRooms().then((data) => setActiveRooms(data.rooms || []));
+  }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -57,6 +62,27 @@ const RoomLobby = () => {
               Logout
             </button>
           </div>
+
+          {activeRooms.length > 0 && (
+            <div className="active-rooms">
+              <h2>Your Active Rooms</h2>
+              <div className="active-rooms-list">
+                {activeRooms.map((room) => (
+                  <div key={room.id} className="active-room-item" onClick={() => navigate(`/host/${room.inviteCode}`)}>
+                    <div className="active-room-info">
+                      <span className="active-room-name">{room.name}</span>
+                      <span className="active-room-meta">
+                        {room._count.playlist} song{room._count.playlist !== 1 ? 's' : ''}
+                        {' · '}{room._count.members} guest{room._count.members !== 1 ? 's' : ''}
+                        {' · '}{room.inviteCode}
+                      </span>
+                    </div>
+                    <span className="active-room-rejoin">Rejoin</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {error && <div className="error-message">{error}</div>}
 

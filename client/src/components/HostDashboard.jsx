@@ -221,6 +221,8 @@ const HostDashboard = () => {
 
           <PlaylistQueue />
 
+          <QRCodeDisplay inviteCode={inviteCode} roomName={room?.name} />
+
           <div className="search-section">
             <SearchBar
               onSearch={handleSearch}

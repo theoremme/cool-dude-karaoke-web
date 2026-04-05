@@ -1451,6 +1451,73 @@ body {
   object-fit: contain;
 }
 
+/* Active rooms on lobby page */
+.active-rooms {
+  border-bottom: 1px solid rgba(0, 200, 255, 0.1);
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+}
+
+.active-rooms h2 {
+  font-size: 16px !important;
+  margin-bottom: 12px !important;
+}
+
+.active-rooms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.active-room-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(0, 200, 255, 0.04);
+  border: 1px solid rgba(0, 200, 255, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.active-room-item:hover {
+  background: rgba(0, 200, 255, 0.08);
+  border-color: rgba(0, 200, 255, 0.25);
+}
+
+.active-room-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.active-room-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.active-room-meta {
+  font-size: 11px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.active-room-rejoin {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: #00c8ff;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
 .form-group {
   margin-bottom: 16px;
 }
