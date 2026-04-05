@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import logo from '../assets/cool-dude-karaoke-logo-v2.png';
+import logo from '../assets/cool-dude-karaoke-logo-v2-nobg.png';
 
 const AuthPage = () => {
   const { login, register } = useAuth();

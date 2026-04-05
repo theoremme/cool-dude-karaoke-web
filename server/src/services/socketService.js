@@ -274,6 +274,35 @@ function setupSocketHandlers(io) {
       }
     });
 
+    // Close room (host ends the session)
+    socket.on('close-room', async ({ roomId }) => {
+      try {
+        // Get the final playlist before closing
+        const playlist = await prisma.playlistItem.findMany({
+          where: { roomId },
+          orderBy: { position: 'asc' },
+        });
+
+        const room = await prisma.room.findUnique({ where: { id: roomId } });
+
+        // Mark room as inactive
+        await prisma.room.update({
+          where: { id: roomId },
+          data: { isActive: false },
+        });
+
+        // Broadcast to all clients including the sender
+        io.to(roomId).emit('room-closed', {
+          room,
+          playlist,
+          message: 'The host has ended the session',
+        });
+      } catch (err) {
+        console.error('close-room error:', err);
+        socket.emit('error', { message: 'Failed to close room' });
+      }
+    });
+
     // Playback controls
     socket.on('play', ({ roomId }) => {
       socket.to(roomId).emit('playback-state', { isPlaying: true });

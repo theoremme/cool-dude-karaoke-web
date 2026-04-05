@@ -1,6 +1,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
-const { search } = require('../controllers/youtubeController');
+const { search, quotaStatus } = require('../controllers/youtubeController');
+const { oauthRedirect, oauthCallback, createPlaylist, oauthStatus } = require('../controllers/youtubePlaylistController');
 
 const router = express.Router();
 
@@ -13,5 +14,12 @@ const searchLimiter = rateLimit({
 });
 
 router.get('/search', searchLimiter, search);
+router.get('/quota', quotaStatus);
+
+// YouTube OAuth + playlist publishing
+router.get('/oauth/status', oauthStatus);
+router.get('/oauth/redirect', oauthRedirect);
+router.get('/oauth/callback', oauthCallback);
+router.post('/playlist/create', createPlaylist);
 
 module.exports = router;

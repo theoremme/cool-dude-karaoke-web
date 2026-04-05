@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import * as api from '../services/api';
-import logo from '../assets/cool-dude-karaoke-logo-v2.png';
+import logo from '../assets/cool-dude-karaoke-logo-v2-nobg.png';
 
 const RoomLobby = () => {
   const { user, logout } = useAuth();
@@ -39,7 +39,6 @@ const RoomLobby = () => {
       <div className="room-lobby">
         <div className="lobby-card">
           <img src={logo} alt="Cool Dude Karaoke" className="auth-logo" />
-
           <div style={{ textAlign: 'center', marginBottom: 16 }}>
             <span style={{ color: '#888', fontSize: 13 }}>
               Welcome, {user?.name || user?.email}

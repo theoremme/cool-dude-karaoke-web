@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import SearchBar from './SearchBar';
 import SearchResults from './SearchResults';
 import VibeSuggestions from './VibeSuggestions';
@@ -24,7 +24,8 @@ const HostDashboard = () => {
   const { inviteCode } = useParams();
   const { socket, isConnected } = useSocket();
   const { user } = useAuth();
-  const { connectSocket, setPlaylist } = usePlaylist();
+  const navigate = useNavigate();
+  const { connectSocket, setPlaylist, items } = usePlaylist();
 
   const savedState = loadHostState(inviteCode);
   const [room, setRoom] = useState(null);
@@ -51,7 +52,13 @@ const HostDashboard = () => {
   // Fetch room and join via socket
   useEffect(() => {
     api.getRoomByInviteCode(inviteCode)
-      .then((data) => setRoom(data.room))
+      .then((data) => {
+        if (data.room && !data.room.isActive) {
+          navigate(`/closeout/${inviteCode}`);
+          return;
+        }
+        setRoom(data.room);
+      })
       .catch((err) => setError(err.message));
   }, [inviteCode]);
 
@@ -86,6 +93,18 @@ const HostDashboard = () => {
       socket.off('room-updated');
     };
   }, [socket, setPlaylist]);
+
+  const handleLeaveRoom = () => {
+    if (!socket || !room) return;
+    // Save playlist to sessionStorage for the closeout page
+    sessionStorage.setItem(`karaoke-closeout-${inviteCode}`, JSON.stringify({
+      roomName: room.name,
+      playlist: items,
+      isGuest: false,
+    }));
+    socket.emit('close-room', { roomId: room.id });
+    navigate(`/closeout/${inviteCode}`);
+  };
 
   const handleSearch = async (query) => {
     setLoading(true);
@@ -160,6 +179,9 @@ const HostDashboard = () => {
     <div className="app host-dashboard">
       <header className="app-header">
         <img src={logo} alt="Cool Dude Karaoke" className="app-logo host-logo" style={{ height: 240 }} />
+        <button className="btn-leave-room" onClick={handleLeaveRoom}>
+          Leave Room
+        </button>
       </header>
 
       <div className="app-body">

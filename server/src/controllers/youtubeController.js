@@ -1,4 +1,4 @@
-const { searchVideos } = require('../services/youtubeService');
+const { searchVideos, getQuotaStatus } = require('../services/youtubeService');
 
 const search = async (req, res) => {
   const { q } = req.query;
@@ -14,7 +14,7 @@ const search = async (req, res) => {
   } catch (err) {
     console.error('YouTube search error:', err);
 
-    if (err.code === 403) {
+    if (err.code === 403 || err.code === 429) {
       return res.status(429).json({ error: 'YouTube API quota exceeded. Please try again later.' });
     }
 
@@ -22,4 +22,8 @@ const search = async (req, res) => {
   }
 };
 
-module.exports = { search };
+const quotaStatus = (req, res) => {
+  res.json(getQuotaStatus());
+};
+
+module.exports = { search, quotaStatus };

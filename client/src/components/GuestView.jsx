@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import SearchBar from './SearchBar';
 import SearchResults from './SearchResults';
 import PlaylistQueue from './PlaylistQueue';
@@ -7,6 +7,7 @@ import { usePlaylist } from '../contexts/PlaylistContext';
 import { useSocket } from '../hooks/useSocket';
 import * as api from '../services/api';
 import logo from '../assets/cool-dude-karaoke-logo-v2.png';
+import logoNoBg from '../assets/cool-dude-karaoke-logo-v2-nobg.png';
 
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= breakpoint);
@@ -28,6 +29,7 @@ function loadGuestState(inviteCode) {
 const GuestView = () => {
   const { inviteCode } = useParams();
   const { socket, isConnected } = useSocket();
+  const navigate = useNavigate();
   const { addItem, addItems, items, currentItem, connectSocket, setPlaylist } = usePlaylist();
   const isMobile = useIsMobile();
   const prevItemsLength = useRef(items.length);
@@ -44,7 +46,20 @@ const GuestView = () => {
   // Fetch room info
   useEffect(() => {
     api.getRoomByInviteCode(inviteCode)
-      .then((data) => setRoom(data.room))
+      .then((data) => {
+        if (data.room && !data.room.isActive) {
+          // Room was closed — redirect to closeout
+          sessionStorage.setItem(`karaoke-closeout-${inviteCode}`, JSON.stringify({
+            roomName: data.room.name,
+            playlist: items,
+            isGuest: true,
+            guestName,
+          }));
+          navigate(`/closeout/${inviteCode}`);
+          return;
+        }
+        setRoom(data.room);
+      })
       .catch((err) => setRoomError(err.message));
   }, [inviteCode]);
 
@@ -61,9 +76,21 @@ const GuestView = () => {
       if (data.playlist) setPlaylist(data.playlist);
     });
 
+    socket.on('room-closed', (data) => {
+      // Save playlist for the closeout page
+      sessionStorage.setItem(`karaoke-closeout-${inviteCode}`, JSON.stringify({
+        roomName: data?.room?.name || room?.name || 'Karaoke Session',
+        playlist: data?.playlist || items,
+        isGuest: true,
+        guestName,
+      }));
+      navigate(`/closeout/${inviteCode}`);
+    });
+
     return () => {
       socket.off('playlist-updated');
       socket.off('room-updated');
+      socket.off('room-closed');
     };
   }, [socket, setPlaylist]);
 
@@ -130,7 +157,7 @@ const GuestView = () => {
       <div className="app app-page">
         <div className="guest-join">
           <div className="join-card">
-            <img src={logo} alt="Cool Dude Karaoke" className="auth-logo" style={{ height: 400 }} />
+            <img src={logoNoBg} alt="Cool Dude Karaoke" className="auth-logo" />
             <div className="error-message">{roomError}</div>
           </div>
         </div>
@@ -143,7 +170,7 @@ const GuestView = () => {
       <div className="app app-page">
         <div className="guest-join">
           <div className="join-card">
-            <img src={logo} alt="Cool Dude Karaoke" className="auth-logo" style={{ height: 400 }} />
+            <img src={logoNoBg} alt="Cool Dude Karaoke" className="auth-logo" />
             <h2>Join {room?.name || 'Karaoke Room'}</h2>
             <form onSubmit={handleJoin}>
               <div className="form-group">

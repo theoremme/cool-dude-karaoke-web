@@ -6,6 +6,7 @@ import AuthPage from './components/AuthPage';
 import RoomLobby from './components/RoomLobby';
 import HostDashboard from './components/HostDashboard';
 import GuestView from './components/GuestView';
+import CloseoutPage from './components/CloseoutPage';
 import './styles/App.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -51,6 +52,10 @@ const AppRoutes = () => {
             <GuestView />
           </PlaylistProvider>
         }
+      />
+      <Route
+        path="/closeout/:inviteCode"
+        element={<CloseoutPage />}
       />
     </Routes>
   );
