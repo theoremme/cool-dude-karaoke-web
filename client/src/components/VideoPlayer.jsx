@@ -273,12 +273,9 @@ const VideoPlayer = ({ isHost = false }) => {
             ⧉
           </button>
           {loading && (
-            <div style={{
-              position: 'absolute', inset: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(0,0,0,0.8)', color: '#00c8ff', fontSize: 16,
-            }}>
-              Loading video...
+            <div className="player-loading-overlay">
+              <div className="player-spinner" />
+              <div className="player-loading-text">Loading video...</div>
             </div>
           )}
         </div>
