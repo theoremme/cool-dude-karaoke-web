@@ -6,26 +6,47 @@ import VibeSuggestions from './VibeSuggestions';
 import VideoPlayer from './VideoPlayer';
 import PlaylistQueue from './PlaylistQueue';
 import PlaylistSync from './PlaylistSync';
+import QRCodeDisplay from './QRCodeDisplay';
 import { usePlaylist } from '../contexts/PlaylistContext';
 import { useSocket } from '../hooks/useSocket';
 import { useAuth } from '../hooks/useAuth';
 import * as api from '../services/api';
 import logo from '../assets/cool-dude-karaoke-logo-v2.png';
 
+function loadHostState(inviteCode) {
+  try {
+    const saved = sessionStorage.getItem(`karaoke-host-${inviteCode}`);
+    return saved ? JSON.parse(saved) : null;
+  } catch { return null; }
+}
+
 const HostDashboard = () => {
   const { inviteCode } = useParams();
   const { socket, isConnected } = useSocket();
   const { user } = useAuth();
-  const { addItem } = usePlaylist();
+  const { connectSocket, setPlaylist } = usePlaylist();
+
+  const savedState = loadHostState(inviteCode);
   const [room, setRoom] = useState(null);
-  const [results, setResults] = useState([]);
-  const [vibeSuggestions, setVibeSuggestions] = useState([]);
+  const [results, setResults] = useState(savedState?.results || []);
+  const [vibeSuggestions, setVibeSuggestions] = useState(savedState?.vibeSuggestions || []);
   const [loading, setLoading] = useState(false);
   const [vibeLoading, setVibeLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
-  const [vibeTheme, setVibeTheme] = useState(null);
+  const [vibeTheme, setVibeTheme] = useState(savedState?.vibeTheme || null);
   const [copied, setCopied] = useState(false);
+
+  // Persist search/vibe state
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(`karaoke-host-${inviteCode}`, JSON.stringify({
+        results,
+        vibeSuggestions,
+        vibeTheme,
+      }));
+    } catch {}
+  }, [results, vibeSuggestions, vibeTheme, inviteCode]);
 
   // Fetch room and join via socket
   useEffect(() => {
@@ -34,32 +55,37 @@ const HostDashboard = () => {
       .catch((err) => setError(err.message));
   }, [inviteCode]);
 
+  // Connect socket to playlist context and join room
   useEffect(() => {
     if (!socket || !room || !isConnected) return;
+
+    connectSocket(socket, room.id, user?.name || 'Host');
+
     socket.emit('join-room', {
       roomId: room.id,
       userId: user?.id,
       guestName: user?.name || 'Host',
     });
-  }, [socket, room, isConnected, user]);
+  }, [socket, room, isConnected, user, connectSocket]);
 
   // Listen for real-time updates
   useEffect(() => {
     if (!socket) return;
 
     socket.on('playlist-updated', (playlist) => {
-      // Server pushes playlist state
+      setPlaylist(playlist);
     });
 
     socket.on('room-updated', (data) => {
       if (data.room) setRoom(data.room);
+      if (data.playlist) setPlaylist(data.playlist);
     });
 
     return () => {
       socket.off('playlist-updated');
       socket.off('room-updated');
     };
-  }, [socket]);
+  }, [socket, setPlaylist]);
 
   const handleSearch = async (query) => {
     setLoading(true);
@@ -166,16 +192,7 @@ const HostDashboard = () => {
         </div>
 
         <div className="panel-right">
-          <div className="invite-section">
-            <div className="invite-label">Invite Code</div>
-            <div className="invite-code-display">{inviteCode}</div>
-            <div className="invite-link">
-              {window.location.origin}/room/{inviteCode}
-            </div>
-            <button className="btn-copy" onClick={handleCopyLink}>
-              {copied ? '✓ Copied!' : 'Copy Link'}
-            </button>
-          </div>
+          <QRCodeDisplay inviteCode={inviteCode} roomName={room?.name} />
           <PlaylistQueue />
           <PlaylistSync socket={socket} roomId={room?.id} />
         </div>

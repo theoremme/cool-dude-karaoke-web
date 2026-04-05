@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { usePlaylist } from '../contexts/PlaylistContext';
 
-const PlaylistQueue = () => {
+const PlaylistQueue = ({ guestMode = false }) => {
   const {
     items,
     currentIndex,
@@ -12,6 +12,7 @@ const PlaylistQueue = () => {
     togglePlay,
     moveItem,
     clearPlaylist,
+    userName,
   } = usePlaylist();
 
   const [dragIndex, setDragIndex] = useState(null);
@@ -61,29 +62,31 @@ const PlaylistQueue = () => {
     <div className="playlist-queue">
       <div className="queue-header">
         <h2>Playlist</h2>
-        <div className="queue-controls">
-          {items.length > 0 && (
-            <>
-              <button className="btn-neon btn-small" onClick={togglePlay}>
-                {isPlaying ? '⏸ Pause' : '▶ Play'}
-              </button>
-              <button
-                className="btn-neon btn-small"
-                onClick={playNext}
-                disabled={currentIndex >= items.length - 1 && currentIndex !== -1}
-                title="Skip to next song"
-              >
-                ⏭ Skip
-              </button>
-              <button
-                className="btn-neon btn-small btn-danger"
-                onClick={clearPlaylist}
-              >
-                Clear
-              </button>
-            </>
-          )}
-        </div>
+        {!guestMode && (
+          <div className="queue-controls">
+            {items.length > 0 && (
+              <>
+                <button className="btn-neon btn-small" onClick={togglePlay}>
+                  {isPlaying ? '⏸ Pause' : '▶ Play'}
+                </button>
+                <button
+                  className="btn-neon btn-small"
+                  onClick={playNext}
+                  disabled={currentIndex >= items.length - 1 && currentIndex !== -1}
+                  title="Skip to next song"
+                >
+                  ⏭ Skip
+                </button>
+                <button
+                  className="btn-neon btn-small btn-danger"
+                  onClick={clearPlaylist}
+                >
+                  Clear
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {items.length === 0 ? (
@@ -99,16 +102,16 @@ const PlaylistQueue = () => {
             <div
               key={item.id}
               className={`queue-item ${index === currentIndex ? 'queue-item-active' : ''} ${dragOverIndex === index ? 'queue-item-dragover' : ''}`}
-              onDoubleClick={() => playIndex(index)}
-              draggable
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDragEnd={handleDragEnd}
-              onDragEnter={(e) => handleDragEnter(e, index)}
-              onDragLeave={handleDragLeave}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
+              onDoubleClick={!guestMode ? () => playIndex(index) : undefined}
+              draggable={!guestMode}
+              onDragStart={!guestMode ? (e) => handleDragStart(e, index) : undefined}
+              onDragEnd={!guestMode ? handleDragEnd : undefined}
+              onDragEnter={!guestMode ? (e) => handleDragEnter(e, index) : undefined}
+              onDragLeave={!guestMode ? handleDragLeave : undefined}
+              onDragOver={!guestMode ? handleDragOver : undefined}
+              onDrop={!guestMode ? handleDrop : undefined}
             >
-              <span className="queue-drag-handle" title="Drag to reorder">⠿</span>
+              {!guestMode && <span className="queue-drag-handle" title="Drag to reorder">⠿</span>}
               <span className="queue-position">
                 {index === currentIndex && isPlaying ? '♪' : index + 1}
               </span>
@@ -123,18 +126,25 @@ const PlaylistQueue = () => {
                 </p>
                 <p className="queue-item-meta">
                   {item.channelName} · {item.duration}
+                  {item.addedByName && (
+                    <span className={`queue-added-by ${userName && item.addedByName === userName ? 'queue-added-by-you' : ''}`}>
+                      {' · '}{item.addedByName === userName ? 'You' : item.addedByName}
+                    </span>
+                  )}
                 </p>
               </div>
-              <button
-                className="queue-remove"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  removeItem(index);
-                }}
-                title="Remove from playlist"
-              >
-                ✕
-              </button>
+              {!guestMode && (
+                <button
+                  className="queue-remove"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeItem(index);
+                  }}
+                  title="Remove from playlist"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           ))}
         </div>

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap');
+
 * {
   margin: 0;
   padding: 0;
@@ -950,6 +952,16 @@ body {
   text-overflow: ellipsis;
 }
 
+.queue-added-by {
+  color: #888;
+}
+
+.queue-added-by-you {
+  color: #00c8ff;
+  font-weight: 600;
+  text-shadow: 0 0 6px rgba(0, 200, 255, 0.4);
+}
+
 .queue-remove {
   background: none;
   border: none;
@@ -1293,6 +1305,91 @@ body {
   background: rgba(0, 200, 255, 0.3);
 }
 
+/* ==================== QR CODE ==================== */
+.qr-code-section {
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.6);
+  border-bottom: 1px solid rgba(0, 200, 255, 0.15);
+  text-align: center;
+}
+
+.qr-code-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.qr-title {
+  color: #ff00ff;
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin: 0;
+  text-shadow: 0 0 10px rgba(255, 0, 255, 0.6), 0 0 20px rgba(255, 0, 255, 0.3);
+}
+
+.qr-code-wrapper {
+  padding: 12px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 0 25px rgba(0, 255, 255, 0.5);
+  position: relative;
+  animation: qrPulse 3s ease-in-out infinite;
+}
+
+
+@keyframes qrPulse {
+  0%, 100% {
+    box-shadow: 0 0 25px rgba(0, 255, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(255, 0, 255, 0.6);
+  }
+}
+
+.qr-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.qr-room-name {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.qr-invite-code {
+  color: #9d4edd;
+  font-size: 14px;
+  margin: 0;
+}
+
+.qr-invite-code span {
+  font-family: monospace;
+  color: #00ffff;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 3px;
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+}
+
+.qr-join-url {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  font-family: monospace;
+  margin: 0;
+  word-break: break-all;
+}
+
+.qr-actions {
+  display: flex;
+  gap: 8px;
+}
+
 /* ==================== AUTH & ROOM PAGES ==================== */
 .auth-page,
 .room-lobby,
@@ -1475,8 +1572,9 @@ body {
   background: rgba(0, 200, 255, 0.1);
 }
 
-/* ==================== HOST DASHBOARD ==================== */
-.host-dashboard {
+/* ==================== HOST / GUEST DASHBOARD ==================== */
+.host-dashboard,
+.guest-dashboard {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -1485,8 +1583,42 @@ body {
   overflow: hidden;
 }
 
-.host-dashboard .app-header {
+.host-dashboard .app-header,
+.guest-dashboard .app-header {
   padding: 6px 30px;
+}
+
+.guest-welcome-bar {
+  background: linear-gradient(180deg, rgba(0, 10, 20, 0.95) 0%, rgba(0, 0, 0, 0.9) 100%);
+  text-align: center;
+  padding: 14px 20px 18px;
+  flex-shrink: 0;
+}
+
+.guest-welcome-room {
+  display: block;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: 1.8rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow:
+    0 0 10px rgba(0, 200, 255, 0.6),
+    0 0 30px rgba(0, 200, 255, 0.3),
+    0 0 60px rgba(157, 0, 255, 0.2);
+}
+
+.guest-welcome-name {
+  display: block;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 500;
+  font-size: 0.95rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #00c8ff;
+  margin-top: 6px;
+  opacity: 0.85;
 }
 
 .host-dashboard .host-logo {
@@ -1590,5 +1722,30 @@ body {
     width: 100%;
     justify-content: flex-end;
     margin-top: 4px;
+  }
+
+  .guest-welcome-room {
+    font-size: 1.2rem;
+    letter-spacing: 0.1em;
+  }
+
+  .guest-welcome-name {
+    font-size: 0.8rem;
+  }
+
+  .guest-welcome-bar {
+    padding: 10px 16px 14px;
+  }
+
+  .guest-view .playlist-queue {
+    max-height: 260px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .guest-view .playlist-queue .queue-list {
+    overflow-y: auto;
+    flex: 1;
   }
 }

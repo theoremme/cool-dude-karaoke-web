@@ -225,6 +225,55 @@ function setupSocketHandlers(io) {
       }
     });
 
+    // Reorder song
+    socket.on('reorder-song', async ({ roomId, itemId, newPosition }) => {
+      try {
+        const item = await prisma.playlistItem.findFirst({
+          where: { id: itemId, roomId },
+        });
+        if (!item) return;
+
+        const allItems = await prisma.playlistItem.findMany({
+          where: { roomId },
+          orderBy: { position: 'asc' },
+        });
+
+        const filtered = allItems.filter((i) => i.id !== itemId);
+        const clampedPos = Math.max(0, Math.min(newPosition, filtered.length));
+        filtered.splice(clampedPos, 0, item);
+
+        for (let i = 0; i < filtered.length; i++) {
+          if (filtered[i].position !== i) {
+            await prisma.playlistItem.update({
+              where: { id: filtered[i].id },
+              data: { position: i },
+            });
+          }
+        }
+
+        const playlist = await prisma.playlistItem.findMany({
+          where: { roomId },
+          orderBy: { position: 'asc' },
+        });
+
+        io.to(roomId).emit('playlist-updated', playlist);
+      } catch (err) {
+        console.error('reorder-song error:', err);
+        socket.emit('error', { message: 'Failed to reorder song' });
+      }
+    });
+
+    // Clear playlist
+    socket.on('clear-playlist', async ({ roomId }) => {
+      try {
+        await prisma.playlistItem.deleteMany({ where: { roomId } });
+        io.to(roomId).emit('playlist-updated', []);
+      } catch (err) {
+        console.error('clear-playlist error:', err);
+        socket.emit('error', { message: 'Failed to clear playlist' });
+      }
+    });
+
     // Playback controls
     socket.on('play', ({ roomId }) => {
       socket.to(roomId).emit('playback-state', { isPlaying: true });

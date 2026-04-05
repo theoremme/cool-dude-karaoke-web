@@ -8,3 +8,4 @@ build/
 Thumbs.db
 server/prisma/migrations/dev/
 debug/
+*-player-script.js
