@@ -1,0 +1,14 @@
+{
+  "name": "karaoke-room-app",
+  "version": "1.0.0",
+  "description": "Collaborative karaoke platform for in-person parties",
+  "scripts": {
+    "install:server": "cd server && npm install",
+    "install:client": "cd client && npm install",
+    "install:all": "npm run install:server && npm run install:client",
+    "build": "npm run install:all && cd client && npm run build && cd ../server && npx prisma generate && npx prisma migrate deploy",
+    "start": "cd server && node server.js",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev"
+  }
+}

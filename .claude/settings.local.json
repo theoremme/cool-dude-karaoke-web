@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cp C:/ai/cool-dude-karaoke/src/assets/cool-dude-karaoke-logo-v1.png C:/ai/cool-dude-karaoke-web/client/src/assets/)",
+      "Bash(cp C:/ai/cool-dude-karaoke/src/assets/cool-dude-karaoke-logo-v2.png C:/ai/cool-dude-karaoke-web/client/src/assets/)",
+      "Bash(cp C:/ai/cool-dude-karaoke/src/contexts/PlaylistContext.js C:/ai/cool-dude-karaoke-web/client/src/contexts/PlaylistContext.js)",
+      "Bash(cp C:/ai/cool-dude-karaoke/src/components/SearchBar.js C:/ai/cool-dude-karaoke-web/client/src/components/SearchBar.js)",
+      "Bash(cp C:/ai/cool-dude-karaoke/src/components/SearchResults.js C:/ai/cool-dude-karaoke-web/client/src/components/SearchResults.js)",
+      "Bash(cp C:/ai/cool-dude-karaoke/src/components/PlaylistQueue.js C:/ai/cool-dude-karaoke-web/client/src/components/PlaylistQueue.js)",
+      "Bash(YT_DLP=\"C:/Users/Lucy/AppData/Roaming/Python/Python312/Scripts/yt-dlp.exe\")",
+      "Bash(\"$YT_DLP\" -f \"best[ext=mp4]\" --get-url \"https://www.youtube.com/watch?v=dQw4w9WgXcQ\")",
+      "Bash(for id:*)",
+      "Bash(do echo:*)",
+      "Bash(done)"
+    ]
+  }
+}
