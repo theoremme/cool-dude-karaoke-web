@@ -200,6 +200,12 @@ const HostDashboard = () => {
                 <button className="btn-neon" onClick={handleLeaveRoom}>End Session</button>
                 <button className="btn-neon" style={{ borderColor: '#555', color: '#888' }} onClick={() => setShowLeaveModal(false)}>Keep Going</button>
               </div>
+              <button
+                style={{ marginTop: 16, background: 'none', border: 'none', color: '#00c8ff', cursor: 'pointer', fontSize: 12 }}
+                onClick={() => navigate('/')}
+              >
+                Just go to the Lobby (keep room open)
+              </button>
             </div>
           </div>
         )}
@@ -276,6 +282,12 @@ const HostDashboard = () => {
               <button className="btn-neon" onClick={handleLeaveRoom}>End Session</button>
               <button className="btn-neon" style={{ borderColor: '#555', color: '#888' }} onClick={() => setShowLeaveModal(false)}>Keep Going</button>
             </div>
+            <button
+              style={{ marginTop: 16, background: 'none', border: 'none', color: '#00c8ff', cursor: 'pointer', fontSize: 12 }}
+              onClick={() => navigate('/')}
+            >
+              Just go to the Lobby (keep room open)
+            </button>
           </div>
         </div>
       )}
