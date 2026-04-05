@@ -53,13 +53,16 @@ const oauthCallback = async (req, res) => {
     returnTo = decoded.returnTo || '/';
   } catch {}
 
+  // In dev, redirect back to Vite dev server, not the backend
+  const clientOrigin = process.env.NODE_ENV === 'production' ? '' : 'http://localhost:5173';
+
   if (error || !code) {
-    return res.redirect(`${returnTo}?youtube_error=${error || 'no_code'}`);
+    return res.redirect(`${clientOrigin}${returnTo}?youtube_error=${error || 'no_code'}`);
   }
 
   const config = getOAuthConfig();
   if (!config) {
-    return res.redirect(`${returnTo}?youtube_error=not_configured`);
+    return res.redirect(`${clientOrigin}${returnTo}?youtube_error=not_configured`);
   }
 
   try {
@@ -75,10 +78,10 @@ const oauthCallback = async (req, res) => {
     // Clean up after 30 minutes
     setTimeout(() => tokenStore.delete(tokenKey), 30 * 60 * 1000);
 
-    res.redirect(`${returnTo}?youtube_token=${tokenKey}`);
+    res.redirect(`${clientOrigin}${returnTo}?youtube_token=${tokenKey}`);
   } catch (err) {
     console.error('OAuth token exchange error:', err);
-    res.redirect(`${returnTo}?youtube_error=token_exchange_failed`);
+    res.redirect(`${clientOrigin}${returnTo}?youtube_error=token_exchange_failed`);
   }
 };
 

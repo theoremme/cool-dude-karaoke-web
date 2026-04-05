@@ -49,7 +49,7 @@ const RoomLobby = () => {
                 marginLeft: 12,
                 background: 'none',
                 border: 'none',
-                color: '#ff4466',
+                color: '#F56F27',
                 cursor: 'pointer',
                 fontSize: 12,
               }}

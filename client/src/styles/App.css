@@ -491,7 +491,7 @@ body {
 
 .vibe-item-error {
   font-size: 10px;
-  color: #ff4466;
+  color: #F56F27;
 }
 
 .vibe-item-result {
@@ -816,8 +816,8 @@ body {
 }
 
 .btn-danger {
-  border-color: #ff4466;
-  color: #ff4466;
+  border-color: #F56F27;
+  color: #F56F27;
   text-shadow: 0 0 6px rgba(255, 68, 102, 0.4);
 }
 
@@ -974,7 +974,7 @@ body {
 }
 
 .queue-remove:hover {
-  color: #ff4466;
+  color: #F56F27;
 }
 
 .queue-remove:active {
@@ -1079,7 +1079,7 @@ body {
 .sync-error {
   margin-top: 6px;
   font-size: 11px;
-  color: #ff4466;
+  color: #F56F27;
 }
 
 /* Quota meter */
@@ -1106,7 +1106,7 @@ body {
 }
 
 .quota-critical {
-  background: #ff4466;
+  background: #F56F27;
 }
 
 .quota-text {
@@ -1160,7 +1160,7 @@ body {
 }
 
 .settings-close:hover {
-  color: #ff4466;
+  color: #F56F27;
 }
 
 .settings-body {
@@ -1284,7 +1284,7 @@ body {
 .settings-message-error {
   background: rgba(255, 68, 102, 0.1);
   border: 1px solid rgba(255, 68, 102, 0.3);
-  color: #ff4466;
+  color: #F56F27;
 }
 
 /* ==================== SCROLLBAR ==================== */
@@ -1657,7 +1657,7 @@ body {
   background: rgba(157, 0, 255, 0.08);
   border: 1px solid rgba(157, 0, 255, 0.15);
   border-radius: 8px;
-  margin-bottom: 16px;
+  margin: 0 10px 10px;
 }
 
 .guest-now-playing .now-playing-label {
@@ -1756,8 +1756,8 @@ body {
   top: 14px;
   right: 14px;
   background: transparent;
-  border: 1px solid rgba(255, 60, 60, 0.4);
-  color: #ff4444;
+  border: 1px solid rgba(245, 111, 39, 0.4);
+  color: #F56F27;
   padding: 6px 14px;
   border-radius: 4px;
   font-size: 12px;
@@ -1767,9 +1767,9 @@ body {
 }
 
 .btn-leave-room:hover {
-  background: rgba(255, 60, 60, 0.1);
-  border-color: #ff4444;
-  box-shadow: 0 0 10px rgba(255, 60, 60, 0.3);
+  background: rgba(245, 111, 39, 0.1);
+  border-color: #F56F27;
+  box-shadow: 0 0 10px rgba(245, 111, 39, 0.3);
 }
 
 /* ==================== CLOSEOUT PAGE ==================== */
@@ -1934,7 +1934,7 @@ body {
 }
 
 .closeout-error {
-  color: #ff4444;
+  color: #F56F27;
   font-size: 0.8rem;
   margin-top: 8px;
 }

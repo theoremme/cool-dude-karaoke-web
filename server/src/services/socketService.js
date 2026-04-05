@@ -303,17 +303,9 @@ function setupSocketHandlers(io) {
       }
     });
 
-    // Playback controls
-    socket.on('play', ({ roomId }) => {
-      socket.to(roomId).emit('playback-state', { isPlaying: true });
-    });
-
-    socket.on('pause', ({ roomId }) => {
-      socket.to(roomId).emit('playback-state', { isPlaying: false });
-    });
-
-    socket.on('skip', async ({ roomId }) => {
-      socket.to(roomId).emit('playback-state', { skip: true });
+    // Playback sync — host broadcasts current playback state to all guests
+    socket.on('playback-sync', ({ roomId, currentIndex, isPlaying }) => {
+      socket.to(roomId).emit('playback-sync', { currentIndex, isPlaying });
     });
 
     // Disconnect — grace period before cleanup

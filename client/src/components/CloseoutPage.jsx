@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import logo from '../assets/cool-dude-karaoke-logo-v2-nobg.png';
+import orbitronBoldUrl from '../assets/Orbitron-Bold.ttf';
 
 function formatDuration(seconds) {
   if (!seconds && seconds !== 0) return '';
@@ -109,7 +110,7 @@ const CloseoutPage = () => {
     }
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
     const pageWidth = 210;
     const pageHeight = 297;
@@ -119,17 +120,59 @@ const CloseoutPage = () => {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     });
 
-    // Dark background
-    doc.setFillColor(10, 10, 15);
-    doc.rect(0, 0, pageWidth, pageHeight, 'F');
+    // Load Orbitron font
+    let hasOrbitron = false;
+    try {
+      const fontRes = await fetch(orbitronBoldUrl);
+      const fontBuf = await fontRes.arrayBuffer();
+      const fontBase64 = btoa(String.fromCharCode(...new Uint8Array(fontBuf)));
+      doc.addFileToVFS('Orbitron-Bold.ttf', fontBase64);
+      doc.addFont('Orbitron-Bold.ttf', 'Orbitron', 'bold');
+      hasOrbitron = true;
+    } catch {
+      // Fall back to helvetica
+    }
 
-    // Neon accent line at top
-    doc.setDrawColor(0, 200, 255);
-    doc.setLineWidth(0.8);
-    doc.line(margin, 12, pageWidth - margin, 12);
+    const setOrbitron = () => {
+      if (hasOrbitron) doc.setFont('Orbitron', 'bold');
+      else doc.setFont('helvetica', 'bold');
+    };
+
+    // --- Draw page background with Tron grid ---
+    function drawPageBackground() {
+      // Dark background
+      doc.setFillColor(10, 10, 15);
+      doc.rect(0, 0, pageWidth, pageHeight, 'F');
+
+      // Tron grid lines — very subtle
+      doc.setDrawColor(18, 22, 30);
+      doc.setLineWidth(0.1);
+
+      // Vertical grid lines
+      for (let x = 0; x <= pageWidth; x += 10) {
+        doc.line(x, 0, x, pageHeight);
+      }
+
+      // Horizontal grid lines
+      for (let gy = 0; gy <= pageHeight; gy += 10) {
+        doc.line(0, gy, pageWidth, gy);
+      }
+
+      // Slightly brighter accent lines every 40mm
+      doc.setDrawColor(22, 30, 40);
+      doc.setLineWidth(0.15);
+      for (let x = 0; x <= pageWidth; x += 40) {
+        doc.line(x, 0, x, pageHeight);
+      }
+      for (let gy = 0; gy <= pageHeight; gy += 40) {
+        doc.line(0, gy, pageWidth, gy);
+      }
+    }
+
+    drawPageBackground();
 
     // Logo
-    let y = 18;
+    let y = 20;
     if (logoImgRef.current) {
       try {
         const canvas = document.createElement('canvas');
@@ -141,41 +184,37 @@ const CloseoutPage = () => {
         const logoWidth = 60;
         const logoHeight = (logoImgRef.current.naturalHeight / logoImgRef.current.naturalWidth) * logoWidth;
         doc.addImage(logoData, 'PNG', (pageWidth - logoWidth) / 2, y, logoWidth, logoHeight);
-        y += logoHeight + 4;
+        y += logoHeight + 12;
       } catch {
-        y += 5;
+        y += 10;
       }
     }
 
     // "Rad sesh, dude!" title
     doc.setTextColor(0, 200, 255);
     doc.setFontSize(26);
-    doc.setFont('helvetica', 'bold');
+    setOrbitron();
     doc.text('RAD SESH, DUDE!', pageWidth / 2, y, { align: 'center' });
-    y += 10;
+    y += 12;
 
     // Room name
     doc.setTextColor(157, 0, 255);
     doc.setFontSize(14);
+    setOrbitron();
     doc.text(roomName.toUpperCase(), pageWidth / 2, y, { align: 'center' });
-    y += 7;
+    y += 8;
 
     // Date
     doc.setTextColor(150, 150, 160);
     doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
     doc.text(dateStr, pageWidth / 2, y, { align: 'center' });
-    y += 10;
-
-    // Divider
-    doc.setDrawColor(157, 0, 255);
-    doc.setLineWidth(0.3);
-    doc.line(margin + 20, y, pageWidth - margin - 20, y);
-    y += 8;
+    y += 14;
 
     // Setlist header
     doc.setTextColor(0, 200, 255);
     doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
+    setOrbitron();
     doc.text('SETLIST', margin, y);
     doc.setTextColor(100, 100, 110);
     doc.setFontSize(9);
@@ -189,8 +228,7 @@ const CloseoutPage = () => {
       // New page if needed
       if (y > pageHeight - 30) {
         doc.addPage();
-        doc.setFillColor(10, 10, 15);
-        doc.rect(0, 0, pageWidth, pageHeight, 'F');
+        drawPageBackground();
         y = margin;
       }
 
@@ -203,7 +241,6 @@ const CloseoutPage = () => {
       // Song title
       doc.setTextColor(230, 230, 240);
       doc.setFont('helvetica', 'bold');
-      const titleMaxWidth = contentWidth - 50;
       const title = item.title.length > 55 ? item.title.substring(0, 52) + '...' : item.title;
       doc.text(title, margin + 10, y);
 
@@ -233,20 +270,16 @@ const CloseoutPage = () => {
       y += 7;
     });
 
-    // Footer line
-    y = Math.max(y + 5, pageHeight - 20);
-    if (y > pageHeight - 15) {
+    // Footer
+    y = Math.max(y + 5, pageHeight - 16);
+    if (y > pageHeight - 10) {
       doc.addPage();
-      doc.setFillColor(10, 10, 15);
-      doc.rect(0, 0, pageWidth, pageHeight, 'F');
-      y = pageHeight - 20;
+      drawPageBackground();
+      y = pageHeight - 16;
     }
-    doc.setDrawColor(0, 200, 255);
-    doc.setLineWidth(0.3);
-    doc.line(margin + 20, y, pageWidth - margin - 20, y);
-    y += 6;
     doc.setTextColor(60, 60, 70);
     doc.setFontSize(7);
+    setOrbitron();
     doc.text('COOL DUDE KARAOKE', pageWidth / 2, y, { align: 'center' });
 
     // Save

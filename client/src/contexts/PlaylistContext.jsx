@@ -155,6 +155,7 @@ export function PlaylistProvider({ children }) {
   const roomIdRef = useRef(null);
   const userNameRef = useRef(null);
   const [userName, setUserName] = useState(null);
+  const isRemoteUpdate = useRef(false);
 
   // Persist state to sessionStorage on every change
   useEffect(() => {
@@ -253,6 +254,27 @@ export function PlaylistProvider({ children }) {
     dispatch({ type: 'SET_PLAYING', payload: val });
   }, []);
 
+  // Receive playback state from remote (host → guests)
+  const setPlaybackState = useCallback((currentIndex, isPlaying) => {
+    isRemoteUpdate.current = true;
+    dispatch({ type: 'PLAY_INDEX', payload: currentIndex });
+    if (!isPlaying) {
+      dispatch({ type: 'SET_PLAYING', payload: false });
+    }
+  }, []);
+
+  // Broadcast playback state to other clients when it changes locally
+  useEffect(() => {
+    if (isRemoteUpdate.current) {
+      isRemoteUpdate.current = false;
+      return;
+    }
+    emitSocket('playback-sync', {
+      currentIndex: state.currentIndex,
+      isPlaying: state.isPlaying,
+    });
+  }, [state.currentIndex, state.isPlaying, emitSocket]);
+
   const currentItem =
     state.currentIndex >= 0 && state.currentIndex < state.items.length
       ? state.items[state.currentIndex]
@@ -273,6 +295,7 @@ export function PlaylistProvider({ children }) {
     clearPlaylist,
     connectSocket,
     setPlaylist,
+    setPlaybackState,
   };
 
   return (

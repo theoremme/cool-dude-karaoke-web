@@ -30,7 +30,7 @@ const GuestView = () => {
   const { inviteCode } = useParams();
   const { socket, isConnected } = useSocket();
   const navigate = useNavigate();
-  const { addItem, addItems, items, currentItem, connectSocket, setPlaylist } = usePlaylist();
+  const { addItem, addItems, items, currentItem, connectSocket, setPlaylist, setPlaybackState } = usePlaylist();
   const isMobile = useIsMobile();
   const prevItemsLength = useRef(items.length);
 
@@ -76,6 +76,10 @@ const GuestView = () => {
       if (data.playlist) setPlaylist(data.playlist);
     });
 
+    socket.on('playback-sync', ({ currentIndex, isPlaying }) => {
+      setPlaybackState(currentIndex, isPlaying);
+    });
+
     socket.on('room-closed', (data) => {
       // Save playlist for the closeout page
       sessionStorage.setItem(`karaoke-closeout-${inviteCode}`, JSON.stringify({
@@ -90,6 +94,7 @@ const GuestView = () => {
     return () => {
       socket.off('playlist-updated');
       socket.off('room-updated');
+      socket.off('playback-sync');
       socket.off('room-closed');
     };
   }, [socket, setPlaylist]);
@@ -265,6 +270,13 @@ const GuestView = () => {
         </div>
 
         <div className="panel-right">
+          {currentItem && (
+            <div className="guest-now-playing">
+              <div className="now-playing-label">NOW PLAYING</div>
+              <div className="now-playing-title">{currentItem.title}</div>
+              <div className="now-playing-channel">{currentItem.channelName}</div>
+            </div>
+          )}
           <PlaylistQueue guestMode />
         </div>
       </div>
