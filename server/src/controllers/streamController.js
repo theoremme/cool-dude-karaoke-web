@@ -37,6 +37,7 @@ function getStreamUrl(videoId) {
       '-f', 'best[ext=mp4]/best',
       '--get-url',
       '--no-warnings',
+      '--extractor-args', 'youtube:player_client=mediaconnect,tv_embedded,web',
     ];
 
     if (hasCookies()) {
