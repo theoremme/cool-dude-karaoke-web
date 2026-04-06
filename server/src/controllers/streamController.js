@@ -246,4 +246,48 @@ const cookieStatus = (req, res) => {
   });
 };
 
-module.exports = { stream, uploadCookies, cookieStatus };
+// Debug: list available formats for a video
+const debugFormats = async (req, res) => {
+  const { videoId } = req.params;
+  if (!videoId) return res.status(400).json({ error: 'Video ID required' });
+
+  const results = { videoId, ytdlCore: null, ytDlp: null };
+
+  // ytdl-core formats
+  try {
+    const agent = getYtdlAgent();
+    const opts = agent ? { agent } : {};
+    const info = await ytdl.getInfo(`https://www.youtube.com/watch?v=${videoId}`, opts);
+    results.ytdlCore = info.formats.map(f => ({
+      itag: f.itag,
+      container: f.container,
+      hasVideo: f.hasVideo,
+      hasAudio: f.hasAudio,
+      quality: f.qualityLabel || f.quality,
+      codecs: f.codecs,
+      mimeType: f.mimeType,
+    }));
+  } catch (e) {
+    results.ytdlCore = { error: e.message };
+  }
+
+  // yt-dlp formats
+  try {
+    const dlpFormats = await new Promise((resolve, reject) => {
+      const args = ['--list-formats', '--no-warnings'];
+      if (hasCookies()) args.push('--cookies', COOKIES_PATH);
+      args.push(`https://www.youtube.com/watch?v=${videoId}`);
+      execFile(YT_DLP_PATH, args, { timeout: 15000 }, (err, stdout, stderr) => {
+        if (err) return reject(new Error(stderr || err.message));
+        resolve(stdout);
+      });
+    });
+    results.ytDlp = dlpFormats;
+  } catch (e) {
+    results.ytDlp = { error: e.message };
+  }
+
+  res.json(results);
+};
+
+module.exports = { stream, uploadCookies, cookieStatus, debugFormats };
