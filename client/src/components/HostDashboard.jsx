@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 function useIsMobile(breakpoint = 768) {
@@ -22,6 +22,11 @@ import { useSocket } from '../hooks/useSocket';
 import { useAuth } from '../hooks/useAuth';
 import * as api from '../services/api';
 import logo from '../assets/cool-dude-karaoke-logo-v2-nobg.png';
+
+function formatTime(isoString) {
+  if (!isoString) return '';
+  return new Date(isoString).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
 
 function loadHostState(inviteCode) {
   try {
@@ -50,6 +55,8 @@ const HostDashboard = () => {
   const [error, setError] = useState(null);
   const [vibeTheme, setVibeTheme] = useState(savedState?.vibeTheme || null);
   const [copied, setCopied] = useState(false);
+  const [members, setMembers] = useState([]);
+  const [guestsExpanded, setGuestsExpanded] = useState(false);
 
   // Persist search/vibe state
   useEffect(() => {
@@ -114,11 +121,30 @@ const HostDashboard = () => {
         setPlaylist(data.playlist);
         setPlaylistLoading(false);
       }
+      if (data.members) {
+        setMembers(data.members.map((m) => ({ ...m, active: true })));
+      }
+    });
+
+    socket.on('user-joined', (member) => {
+      setMembers((prev) => {
+        const existing = prev.find((m) => m.id === member.id);
+        if (existing) return prev.map((m) => m.id === member.id ? { ...m, active: true, leftAt: null } : m);
+        return [...prev, { ...member, active: true }];
+      });
+    });
+
+    socket.on('user-left', ({ id, guestName }) => {
+      setMembers((prev) =>
+        prev.map((m) => m.id === id ? { ...m, active: false, leftAt: new Date().toISOString() } : m)
+      );
     });
 
     return () => {
       socket.off('playlist-updated');
       socket.off('room-updated');
+      socket.off('user-joined');
+      socket.off('user-left');
     };
   }, [socket, setPlaylist]);
 
@@ -262,6 +288,31 @@ const HostDashboard = () => {
     });
   };
 
+  // Consolidate members by name (handles page refreshes creating duplicate entries)
+  const consolidatedMembers = useMemo(() => {
+    const byName = new Map();
+    for (const m of members) {
+      const key = m.guestName || m.id;
+      const existing = byName.get(key);
+      if (!existing) {
+        byName.set(key, { ...m });
+      } else {
+        if (m.joinedAt && (!existing.joinedAt || m.joinedAt < existing.joinedAt)) {
+          existing.joinedAt = m.joinedAt;
+        }
+        if (m.active) {
+          existing.active = true;
+          existing.leftAt = null;
+        }
+        if (m.leftAt && (!existing.leftAt || m.leftAt > existing.leftAt)) {
+          existing.leftAt = m.leftAt;
+        }
+        if (m.active) existing.id = m.id;
+      }
+    }
+    return Array.from(byName.values());
+  }, [members]);
+
   const inactivityModal = inactivityWarning && (
     <div className="mobile-warning-overlay">
       <div className="auth-card" style={{ maxWidth: 380, textAlign: 'center' }}>
@@ -318,7 +369,7 @@ const HostDashboard = () => {
             <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
               <button className="btn-lobby" style={{ position: 'static' }} onClick={() => navigate('/')}>Lobby</button>
               <button className="btn-leave-room" style={{ position: 'static' }} onClick={() => setShowLeaveModal(true)}>
-                Leave Room
+                Let's Bounce
               </button>
             </div>
           </div>
@@ -334,6 +385,8 @@ const HostDashboard = () => {
           <PlaylistQueue loading={playlistLoading} />
 
           <QRCodeDisplay inviteCode={inviteCode} roomName={room?.name} />
+
+          {guestList}
 
           <div className="search-section">
             <SearchBar
@@ -383,7 +436,7 @@ const HostDashboard = () => {
         <button className="btn-lobby" onClick={() => navigate('/')}>Lobby</button>
         <img src={logo} alt="Cool Dude Karaoke" className="app-logo host-logo" style={{ height: 240 }} />
         <button className="btn-leave-room" onClick={() => setShowLeaveModal(true)}>
-          Leave Room
+          Let's Bounce
         </button>
       </header>
 
@@ -417,7 +470,14 @@ const HostDashboard = () => {
         </div>
 
         <div className="panel-right">
-          <QRCodeDisplay inviteCode={inviteCode} roomName={room?.name} />
+          <QRCodeDisplay
+            inviteCode={inviteCode}
+            roomName={room?.name}
+            members={consolidatedMembers}
+            guestsExpanded={guestsExpanded}
+            onToggleGuests={() => setGuestsExpanded((v) => !v)}
+            formatTime={formatTime}
+          />
           <PlaylistQueue loading={playlistLoading} />
           <PlaylistSync socket={socket} roomId={room?.id} />
         </div>

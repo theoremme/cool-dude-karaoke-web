@@ -12,7 +12,7 @@
 - Mobile vibe button heights standardized
 
 ### Incomplete Tasks
-1. **ytdl-core verification** — Railway was down when the ytdl-core deploy queued. Need to verify video playback works with the new extractor. If ytdl-core also gets bot-detected, cookies are the remaining option.
+1. **Permanent video extraction fix** — Current setup uses a residential proxy (YT_PROXY env var) to route yt-dlp around Railway's flagged datacenter IP. Works but adds a dependency. Permanent fix options: (a) Cloudflare Worker / AWS Lambda for extraction from a clean IP, (b) self-hosted extraction microservice on a non-datacenter VPS. The proxy is a recurring cost and the free tier may have limits.
 2. **Popout video elapsed time sync** — Still reverted from last session. Needs re-implementation.
 3. **Unused files not cleaned up** — `server/src/services/streamService.js` (replaced by yt-dlp/ytdl-core controller), default Vite scaffold files.
 4. **Vibe generation not tested end-to-end** — Requires `ANTHROPIC_API_KEY` in server/.env and Railway.

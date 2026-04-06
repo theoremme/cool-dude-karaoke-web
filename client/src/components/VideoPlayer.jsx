@@ -1,6 +1,29 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { usePlaylist } from '../contexts/PlaylistContext';
 
+const LOADING_PHRASES = [
+  "Wheezin' the juice!",
+  'Hold on to your butts.',
+  'Party on, Wayne.',
+  'Bueller? Bueller?',
+  "I'll be back.",
+  'Be excellent to each other.',
+  "Rollin' with the homies.",
+];
+
+function useLoadingPhrase(loading) {
+  const [phrase, setPhrase] = useState(() => LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
+  useEffect(() => {
+    if (!loading) return;
+    setPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
+    const interval = setInterval(() => {
+      setPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [loading]);
+  return phrase;
+}
+
 const POPOUT_HTML = (videoSrc, title) => `<!DOCTYPE html>
 <html><head>
 <title>${title.replace(/"/g, '&quot;')}</title>
@@ -46,8 +69,9 @@ const VideoPlayer = ({ isHost = false }) => {
   const videoRef = useRef(null);
   const popoutRef = useRef(null);
   const popoutTimeRef = useRef(0);
-  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const loadingPhrase = useLoadingPhrase(loading);
+  const [error, setError] = useState(null);
   const [poppedOut, setPoppedOut] = useState(false);
 
   // Listen for messages from popout window
@@ -277,8 +301,9 @@ const VideoPlayer = ({ isHost = false }) => {
               position: 'absolute', inset: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: 'rgba(0,0,0,0.8)', color: '#00c8ff', fontSize: 16,
+              fontStyle: 'italic',
             }}>
-              Loading video...
+              {loadingPhrase}
             </div>
           )}
         </div>
