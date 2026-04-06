@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { usePlaylist } from '../contexts/PlaylistContext';
 
-const POPOUT_HTML = (title) => `<!DOCTYPE html>
+const POPOUT_HTML = (videoSrc, title) => `<!DOCTYPE html>
 <html><head>
 <title>${title.replace(/"/g, '&quot;')}</title>
 <style>
@@ -10,7 +10,7 @@ const POPOUT_HTML = (title) => `<!DOCTYPE html>
   video { width: 100vw; height: 100vh; object-fit: contain; }
 </style>
 </head><body>
-<video id="v" autoplay controls></video>
+<video id="v" src="${videoSrc}" autoplay controls></video>
 <script>
   const video = document.getElementById('v');
   video.onended = () => window.opener?.postMessage({ type: 'popout-ended' }, '*');
@@ -168,7 +168,7 @@ const VideoPlayer = ({ isHost = false }) => {
     const startTime = videoRef.current?.currentTime || 0;
 
     const videoSrc = `/api/stream/${currentItem.videoId}`;
-    const html = POPOUT_HTML(currentItem.title);
+    const html = POPOUT_HTML(videoSrc, currentItem.title);
 
     const popup = window.open('', 'karaoke-popout', 'width=960,height=540,resizable=yes');
     if (!popup) {
@@ -181,7 +181,7 @@ const VideoPlayer = ({ isHost = false }) => {
     popoutRef.current = popup;
     setPoppedOut(true);
 
-    // Send the video source and start time once the popout is ready
+    // Send the start time to the popout once it's ready
     setTimeout(() => {
       popup.postMessage({
         type: 'popout-load',
@@ -273,9 +273,12 @@ const VideoPlayer = ({ isHost = false }) => {
             ⧉
           </button>
           {loading && (
-            <div className="player-loading-overlay">
-              <div className="player-spinner" />
-              <div className="player-loading-text">Loading video...</div>
+            <div style={{
+              position: 'absolute', inset: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(0,0,0,0.8)', color: '#00c8ff', fontSize: 16,
+            }}>
+              Loading video...
             </div>
           )}
         </div>

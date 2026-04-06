@@ -34,8 +34,8 @@ function getStreamUrl(videoId) {
 
   return new Promise((resolve, reject) => {
     const args = [
-      '-f', '18/22/best[ext=mp4]/best',
-      '-j',
+      '-f', 'best[ext=mp4]/best',
+      '--get-url',
       '--no-warnings',
     ];
 
@@ -48,22 +48,17 @@ function getStreamUrl(videoId) {
     execFile(
       YT_DLP_PATH,
       args,
-      { timeout: 30000, maxBuffer: 10 * 1024 * 1024 },
+      { timeout: 15000 },
       (err, stdout, stderr) => {
         if (err) {
           return reject(new Error(stderr || err.message));
         }
-        try {
-          const info = JSON.parse(stdout);
-          const url = info.url || info.webpage_url;
-          if (!url) {
-            return reject(new Error('No URL in video info'));
-          }
-          urlCache.set(videoId, { url, time: Date.now() });
-          resolve(url);
-        } catch (e) {
-          reject(new Error('Failed to parse video info: ' + e.message));
+        const url = stdout.trim();
+        if (!url) {
+          return reject(new Error('No URL returned'));
         }
+        urlCache.set(videoId, { url, time: Date.now() });
+        resolve(url);
       }
     );
   });
@@ -141,7 +136,6 @@ const uploadCookies = async (req, res) => {
 
   try {
     fs.writeFileSync(COOKIES_PATH, cookies);
-    // Clear URL cache so new requests use fresh cookies
     urlCache.clear();
     console.log('[yt-dlp] Cookies updated via API');
     res.json({ success: true, message: 'Cookies updated' });
