@@ -16,10 +16,6 @@ function useLoadingPhrase(loading) {
   useEffect(() => {
     if (!loading) return;
     setPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
-    const interval = setInterval(() => {
-      setPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
-    }, 2000);
-    return () => clearInterval(interval);
   }, [loading]);
   return phrase;
 }
