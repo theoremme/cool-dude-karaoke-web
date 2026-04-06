@@ -131,27 +131,68 @@ function getStreamUrlYtDlp(videoId) {
   });
 }
 
+// Primary: use external extraction service (Cloud Run / clean IP)
+async function getStreamUrlExtractor(videoId) {
+  const extractorUrl = process.env.EXTRACTOR_URL;
+  if (!extractorUrl) throw new Error('EXTRACTOR_URL not configured');
+
+  const headers = {};
+  if (process.env.EXTRACTOR_API_KEY) {
+    headers['x-api-key'] = process.env.EXTRACTOR_API_KEY;
+  }
+
+  const res = await fetch(`${extractorUrl}/extract/${videoId}`, { headers });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Extraction failed');
+  return data.url;
+}
+
 async function getStreamUrl(videoId) {
   const cached = urlCache.get(videoId);
   if (cached && Date.now() - cached.time < CACHE_TTL) {
     return cached.url;
   }
 
-  // Try ytdl-core first, fall back to yt-dlp
+  // Try external extractor first, then ytdl-core locally, then yt-dlp
   let url;
   let source;
-  try {
-    url = await getStreamUrlYtdl(videoId);
-    source = 'ytdl-core';
-  } catch (ytdlErr) {
-    console.warn(`[stream] ytdl-core failed for ${videoId}: ${ytdlErr.message}`);
+  const errors = [];
+
+  // 1. External extractor (Cloud Run — clean IP)
+  if (process.env.EXTRACTOR_URL) {
+    try {
+      url = await getStreamUrlExtractor(videoId);
+      source = 'extractor';
+    } catch (e) {
+      errors.push(`extractor: ${e.message}`);
+      console.warn(`[stream] extractor failed for ${videoId}: ${e.message}`);
+    }
+  }
+
+  // 2. Local ytdl-core
+  if (!url) {
+    try {
+      url = await getStreamUrlYtdl(videoId);
+      source = 'ytdl-core';
+    } catch (e) {
+      errors.push(`ytdl-core: ${e.message}`);
+      console.warn(`[stream] ytdl-core failed for ${videoId}: ${e.message}`);
+    }
+  }
+
+  // 3. Local yt-dlp
+  if (!url) {
     try {
       url = await getStreamUrlYtDlp(videoId);
       source = 'yt-dlp';
-    } catch (dlpErr) {
-      console.error(`[stream] yt-dlp also failed for ${videoId}: ${dlpErr.message}`);
-      throw new Error(`Both extractors failed. ytdl-core: ${ytdlErr.message} | yt-dlp: ${dlpErr.message}`);
+    } catch (e) {
+      errors.push(`yt-dlp: ${e.message}`);
+      console.error(`[stream] yt-dlp also failed for ${videoId}: ${e.message}`);
     }
+  }
+
+  if (!url) {
+    throw new Error(`All extractors failed. ${errors.join(' | ')}`);
   }
 
   console.log(`[stream] Got URL for ${videoId} via ${source}${hasCookies() ? ' (with cookies)' : ''}`);
