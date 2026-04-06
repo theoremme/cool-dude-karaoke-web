@@ -60,9 +60,9 @@ function QRCodeDisplay({ inviteCode, roomName, members = [], guestsExpanded, onT
         </div>
 
         <div className="qr-info">
-          {roomName && <p className="qr-room-name">{roomName}</p>}
+          <p className="qr-scan-label">Scan to join</p>
+          {roomName && <p className="qr-room-name" style={{ textTransform: 'uppercase', fontWeight: 700 }}>{roomName}</p>}
           <p className="qr-invite-code">Code: <span>{inviteCode}</span></p>
-          <p className="qr-join-url">{joinUrl}</p>
         </div>
 
         <div className="qr-actions">

@@ -1394,10 +1394,18 @@ body {
   gap: 4px;
 }
 
+.qr-scan-label {
+  color: #888;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+}
+
 .qr-room-name {
   color: #fff;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   margin: 0;
 }
 

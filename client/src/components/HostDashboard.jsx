@@ -379,7 +379,7 @@ const HostDashboard = () => {
           <div className="guest-header">
             <img src={logo} alt="Cool Dude Karaoke" style={{ height: 180, marginBottom: 8 }} />
             <h2>{room?.name}</h2>
-            <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+            <div style={{ display: 'flex', gap: 10, marginTop: 8, width: '100%', justifyContent: 'space-between' }}>
               <button className="btn-lobby" style={{ position: 'static' }} onClick={() => navigate('/')}>Lobby</button>
               <button className="btn-leave-room" style={{ position: 'static' }} onClick={() => setShowLeaveModal(true)}>
                 Let's Bounce
