@@ -12,7 +12,7 @@ const LOADING_PHRASES = [
 ];
 
 const MobilePlayer = ({ onExit }) => {
-  const { currentItem, isPlaying, playNext, setPlaying, togglePlay } = usePlaylist();
+  const { currentItem, isPlaying, playNext, setPlaying, togglePlay, playIndex, items } = usePlaylist();
   const containerRef = useRef(null);
   const videoRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -52,6 +52,13 @@ const MobilePlayer = ({ onExit }) => {
       }
     };
   }, [onExit]);
+
+  // Start playback if nothing is playing
+  useEffect(() => {
+    if (!currentItem && items.length > 0) {
+      playIndex(0);
+    }
+  }, []);
 
   // Load video when currentItem changes
   useEffect(() => {
