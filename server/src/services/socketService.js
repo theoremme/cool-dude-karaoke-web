@@ -5,7 +5,70 @@ const prisma = require('../lib/prisma');
 const disconnectedUsers = new Map();
 const RECONNECT_GRACE_MS = 30000; // 30 seconds to reconnect
 
+// Auto-close inactive rooms to free WebSocket connections and save costs
+const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+const WARNING_BEFORE = 2 * 60 * 1000;      // warn 2 minutes before close
+const CHECK_INTERVAL = 30 * 1000;           // check every 30 seconds
+const roomActivity = new Map(); // roomId → { lastActivity: timestamp, warned: boolean }
+
 function setupSocketHandlers(io) {
+  // Track room activity and emit clear if warning was active
+  function touchRoom(roomId) {
+    const prev = roomActivity.get(roomId);
+    const wasWarned = prev?.warned || false;
+    roomActivity.set(roomId, { lastActivity: Date.now(), warned: false });
+    if (wasWarned) {
+      io.to(roomId).emit('inactivity-cleared');
+    }
+  }
+
+  // Periodic check for inactive rooms
+  setInterval(async () => {
+    const now = Date.now();
+    for (const [roomId, state] of roomActivity.entries()) {
+      const idle = now - state.lastActivity;
+
+      if (idle >= INACTIVITY_TIMEOUT) {
+        // Auto-close the room
+        try {
+          const room = await prisma.room.findUnique({ where: { id: roomId } });
+          if (!room || !room.isActive) {
+            roomActivity.delete(roomId);
+            continue;
+          }
+
+          const playlist = await prisma.playlistItem.findMany({
+            where: { roomId },
+            orderBy: { position: 'asc' },
+          });
+
+          await prisma.room.update({
+            where: { id: roomId },
+            data: { isActive: false },
+          });
+
+          io.to(roomId).emit('room-closed', {
+            room,
+            playlist,
+            message: 'Room closed due to inactivity',
+            inactivity: true,
+          });
+
+          roomActivity.delete(roomId);
+          console.log(`[Auto-close] Room ${roomId} closed due to inactivity`);
+        } catch (err) {
+          console.error('[Auto-close] Error:', err);
+          roomActivity.delete(roomId);
+        }
+      } else if (idle >= INACTIVITY_TIMEOUT - WARNING_BEFORE && !state.warned) {
+        state.warned = true;
+        const remainingSeconds = Math.ceil((INACTIVITY_TIMEOUT - idle) / 1000);
+        io.to(roomId).emit('inactivity-warning', { remainingSeconds });
+        console.log(`[Auto-close] Warning sent for room ${roomId}, ${remainingSeconds}s remaining`);
+      }
+    }
+  }, CHECK_INTERVAL);
+
   io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
@@ -52,6 +115,7 @@ function setupSocketHandlers(io) {
         });
 
         socket.emit('room-updated', { room, playlist, members });
+        touchRoom(roomId);
       } catch (err) {
         console.error('join-room error:', err);
         socket.emit('error', { message: 'Failed to join room' });
@@ -122,6 +186,7 @@ function setupSocketHandlers(io) {
 
         socket.emit('room-updated', { room, playlist, members });
         socket.emit('rejoined', { memberId: socket.data.memberId });
+        touchRoom(roomId);
       } catch (err) {
         console.error('rejoin-room error:', err);
         socket.emit('error', { message: 'Failed to rejoin room' });
@@ -185,6 +250,7 @@ function setupSocketHandlers(io) {
         });
 
         io.to(roomId).emit('playlist-updated', playlist);
+        touchRoom(roomId);
       } catch (err) {
         console.error('add-song error:', err);
         socket.emit('error', { message: 'Failed to add song' });
@@ -217,6 +283,7 @@ function setupSocketHandlers(io) {
         });
 
         io.to(roomId).emit('playlist-updated', playlist);
+        touchRoom(roomId);
       } catch (err) {
         console.error('remove-song error:', err);
         socket.emit('error', { message: 'Failed to remove song' });
@@ -255,6 +322,7 @@ function setupSocketHandlers(io) {
         });
 
         io.to(roomId).emit('playlist-updated', playlist);
+        touchRoom(roomId);
       } catch (err) {
         console.error('reorder-song error:', err);
         socket.emit('error', { message: 'Failed to reorder song' });
@@ -274,6 +342,7 @@ function setupSocketHandlers(io) {
 
     // Close room (host ends the session)
     socket.on('close-room', async ({ roomId }) => {
+      roomActivity.delete(roomId);
       try {
         // Get the final playlist before closing
         const playlist = await prisma.playlistItem.findMany({
@@ -304,6 +373,12 @@ function setupSocketHandlers(io) {
     // Playback sync — host broadcasts current playback state to all guests
     socket.on('playback-sync', ({ roomId, currentIndex, isPlaying }) => {
       socket.to(roomId).emit('playback-sync', { currentIndex, isPlaying });
+      touchRoom(roomId);
+    });
+
+    // Host confirms they're still active (from inactivity warning modal)
+    socket.on('activity-ping', ({ roomId }) => {
+      if (roomId) touchRoom(roomId);
     });
 
     // Disconnect — grace period before cleanup

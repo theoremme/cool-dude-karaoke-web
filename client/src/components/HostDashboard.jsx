@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 function useIsMobile(breakpoint = 768) {
@@ -117,6 +117,64 @@ const HostDashboard = () => {
   }, [socket, setPlaylist]);
 
   const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [inactivityWarning, setInactivityWarning] = useState(null);
+  const countdownRef = useRef(null);
+
+  // Inactivity warning + auto-close listeners
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('inactivity-warning', ({ remainingSeconds }) => {
+      setInactivityWarning({ remainingSeconds });
+      if (countdownRef.current) clearInterval(countdownRef.current);
+      let seconds = remainingSeconds;
+      countdownRef.current = setInterval(() => {
+        seconds--;
+        if (seconds <= 0) {
+          clearInterval(countdownRef.current);
+          countdownRef.current = null;
+          return;
+        }
+        setInactivityWarning({ remainingSeconds: seconds });
+      }, 1000);
+    });
+
+    socket.on('inactivity-cleared', () => {
+      setInactivityWarning(null);
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+        countdownRef.current = null;
+      }
+    });
+
+    socket.on('room-closed', (data) => {
+      sessionStorage.setItem(`karaoke-closeout-${inviteCode}`, JSON.stringify({
+        roomName: data?.room?.name || room?.name,
+        playlist: data?.playlist || items,
+        isGuest: false,
+        inactivity: data?.inactivity || false,
+      }));
+      navigate(`/closeout/${inviteCode}`);
+    });
+
+    return () => {
+      socket.off('inactivity-warning');
+      socket.off('inactivity-cleared');
+      socket.off('room-closed');
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, [socket, inviteCode, room, items, navigate]);
+
+  const handleStillHere = () => {
+    if (socket && room) {
+      socket.emit('activity-ping', { roomId: room.id });
+    }
+    setInactivityWarning(null);
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+  };
 
   const handleLeaveRoom = () => {
     if (!socket || !room) return;
@@ -198,9 +256,25 @@ const HostDashboard = () => {
     });
   };
 
+  const inactivityModal = inactivityWarning && (
+    <div className="mobile-warning-overlay">
+      <div className="auth-card" style={{ maxWidth: 380, textAlign: 'center' }}>
+        <h2 style={{ fontFamily: 'Orbitron', fontSize: '1.3rem', marginBottom: 16 }}>Hey dude - you there?</h2>
+        <p style={{ color: '#888', marginBottom: 20, lineHeight: 1.5 }}>
+          No one's playing music or adding songs. This room will automatically close in{' '}
+          <span style={{ color: '#F56F27', fontFamily: 'Orbitron', fontWeight: 700 }}>
+            {Math.floor(inactivityWarning.remainingSeconds / 60)}:{String(inactivityWarning.remainingSeconds % 60).padStart(2, '0')}
+          </span>
+        </p>
+        <button className="btn-neon" onClick={handleStillHere}>I'm still here!</button>
+      </div>
+    </div>
+  );
+
   if (isMobile) {
     return (
       <div className="app app-page">
+        {inactivityModal}
         {showLeaveModal && (
           <div className="mobile-warning-overlay">
             <div className="mobile-warning-card">
@@ -286,6 +360,7 @@ const HostDashboard = () => {
 
   return (
     <div className="app host-dashboard">
+      {inactivityModal}
       {showLeaveModal && (
         <div className="mobile-warning-overlay">
           <div className="auth-card" style={{ maxWidth: 380 }}>
