@@ -137,9 +137,14 @@ const GuestView = () => {
     prevItemsLength.current = items.length;
   }, [items.length, isMobile]);
 
-  // Connect socket to playlist context and re-join room on reload
+  // Connect socket to playlist context and re-join room (once per connection)
+  const joinedSocketRef = useRef(false);
   useEffect(() => {
-    if (!hasJoined || !socket || !room || !isConnected) return;
+    if (!isConnected) {
+      joinedSocketRef.current = false;
+      return;
+    }
+    if (!hasJoined || !socket || !room || joinedSocketRef.current) return;
 
     connectSocket(socket, room.id, guestName.trim());
 
@@ -147,6 +152,7 @@ const GuestView = () => {
       roomId: room.id,
       guestName: guestName.trim(),
     });
+    joinedSocketRef.current = true;
   }, [hasJoined, socket, room, isConnected, guestName, connectSocket]);
 
   const handleJoin = (e) => {

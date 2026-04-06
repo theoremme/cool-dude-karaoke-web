@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 
 function useIsMobile(breakpoint = 768) {
@@ -81,9 +81,14 @@ const HostDashboard = () => {
       .catch((err) => setError(err.message));
   }, [inviteCode]);
 
-  // Connect socket to playlist context and join room
+  // Connect socket to playlist context and join room (once per connection)
+  const joinedRef = useRef(false);
   useEffect(() => {
-    if (!socket || !room || !isConnected) return;
+    if (!isConnected) {
+      joinedRef.current = false;
+      return;
+    }
+    if (!socket || !room || joinedRef.current) return;
 
     connectSocket(socket, room.id, user?.name || 'Host');
 
@@ -92,6 +97,7 @@ const HostDashboard = () => {
       userId: user?.id,
       guestName: user?.name || 'Host',
     });
+    joinedRef.current = true;
   }, [socket, room, isConnected, user, connectSocket]);
 
   // Listen for real-time updates
