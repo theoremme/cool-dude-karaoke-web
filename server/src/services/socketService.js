@@ -6,16 +6,19 @@ const disconnectedUsers = new Map();
 const RECONNECT_GRACE_MS = 30000; // 30 seconds to reconnect
 
 // Auto-close inactive rooms to free WebSocket connections and save costs
-const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes
-const WARNING_BEFORE = 2 * 60 * 1000;      // warn 2 minutes before close
-const CHECK_INTERVAL = 30 * 1000;           // check every 30 seconds
+// TODO: restore to 10min/2min after testing
+const INACTIVITY_TIMEOUT = 2 * 60 * 1000;  // 2 minutes (testing)
+const WARNING_BEFORE = 30 * 1000;           // warn 30 seconds before close (testing)
+const CHECK_INTERVAL = 10 * 1000;           // check every 10 seconds (testing)
 const roomActivity = new Map(); // roomId → { lastActivity: timestamp, warned: boolean }
 
 function setupSocketHandlers(io) {
   // Track room activity and emit clear if warning was active
-  function touchRoom(roomId) {
+  function touchRoom(roomId, source) {
     const prev = roomActivity.get(roomId);
     const wasWarned = prev?.warned || false;
+    const idleSeconds = prev ? Math.round((Date.now() - prev.lastActivity) / 1000) : 0;
+    console.log(`[Activity] Room ${roomId} touched by "${source}" (was idle ${idleSeconds}s${wasWarned ? ', warning cleared' : ''})`);
     roomActivity.set(roomId, { lastActivity: Date.now(), warned: false });
     if (wasWarned) {
       io.to(roomId).emit('inactivity-cleared');
@@ -115,7 +118,7 @@ function setupSocketHandlers(io) {
         });
 
         socket.emit('room-updated', { room, playlist, members });
-        touchRoom(roomId);
+        touchRoom(roomId, 'join-room');
       } catch (err) {
         console.error('join-room error:', err);
         socket.emit('error', { message: 'Failed to join room' });
@@ -186,7 +189,7 @@ function setupSocketHandlers(io) {
 
         socket.emit('room-updated', { room, playlist, members });
         socket.emit('rejoined', { memberId: socket.data.memberId });
-        touchRoom(roomId);
+        touchRoom(roomId, 'rejoin-room');
       } catch (err) {
         console.error('rejoin-room error:', err);
         socket.emit('error', { message: 'Failed to rejoin room' });
@@ -250,7 +253,7 @@ function setupSocketHandlers(io) {
         });
 
         io.to(roomId).emit('playlist-updated', playlist);
-        touchRoom(roomId);
+        touchRoom(roomId, 'add-song');
       } catch (err) {
         console.error('add-song error:', err);
         socket.emit('error', { message: 'Failed to add song' });
@@ -283,7 +286,7 @@ function setupSocketHandlers(io) {
         });
 
         io.to(roomId).emit('playlist-updated', playlist);
-        touchRoom(roomId);
+        touchRoom(roomId, 'remove-song');
       } catch (err) {
         console.error('remove-song error:', err);
         socket.emit('error', { message: 'Failed to remove song' });
@@ -322,7 +325,7 @@ function setupSocketHandlers(io) {
         });
 
         io.to(roomId).emit('playlist-updated', playlist);
-        touchRoom(roomId);
+        touchRoom(roomId, 'reorder-song');
       } catch (err) {
         console.error('reorder-song error:', err);
         socket.emit('error', { message: 'Failed to reorder song' });
@@ -373,12 +376,12 @@ function setupSocketHandlers(io) {
     // Playback sync — host broadcasts current playback state to all guests
     socket.on('playback-sync', ({ roomId, currentIndex, isPlaying }) => {
       socket.to(roomId).emit('playback-sync', { currentIndex, isPlaying });
-      touchRoom(roomId);
+      touchRoom(roomId, 'playback-sync');
     });
 
     // Host confirms they're still active (from inactivity warning modal)
     socket.on('activity-ping', ({ roomId }) => {
-      if (roomId) touchRoom(roomId);
+      if (roomId) touchRoom(roomId, 'activity-ping');
     });
 
     // Disconnect — grace period before cleanup
