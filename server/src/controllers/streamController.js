@@ -17,9 +17,9 @@ const CACHE_TTL = 3 * 60 * 60 * 1000; // 3 hours
 if (process.env.YT_COOKIES_BASE64) {
   try {
     fs.writeFileSync(COOKIES_PATH, Buffer.from(process.env.YT_COOKIES_BASE64, 'base64').toString('utf-8'));
-    console.log('[yt-dlp] Cookies loaded from YT_COOKIES_BASE64 env var');
+    console.log('[cookies] Loaded from YT_COOKIES_BASE64 env var');
   } catch (e) {
-    console.error('[yt-dlp] Failed to write cookies from env:', e.message);
+    console.error('[cookies] Failed to write from env:', e.message);
   }
 }
 
@@ -27,34 +27,78 @@ function hasCookies() {
   return fs.existsSync(COOKIES_PATH);
 }
 
-// Primary: use @distube/ytdl-core (pure Node.js, different API than yt-dlp)
+// Parse Netscape cookies.txt into array for @distube/ytdl-core
+function parseCookiesForYtdl() {
+  if (!hasCookies()) return null;
+  try {
+    const text = fs.readFileSync(COOKIES_PATH, 'utf-8');
+    const cookies = [];
+    for (const line of text.split('\n')) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const parts = trimmed.split('\t');
+      if (parts.length >= 7) {
+        cookies.push({
+          domain: parts[0],
+          path: parts[2],
+          secure: parts[3] === 'TRUE',
+          expirationDate: parseInt(parts[4]) || 0,
+          name: parts[5],
+          value: parts[6],
+        });
+      }
+    }
+    return cookies.length > 0 ? cookies : null;
+  } catch (e) {
+    console.error('[cookies] Failed to parse for ytdl-core:', e.message);
+    return null;
+  }
+}
+
+// Build ytdl-core agent with cookies if available
+function getYtdlAgent() {
+  const cookies = parseCookiesForYtdl();
+  if (cookies) {
+    try {
+      return ytdl.createAgent(cookies);
+    } catch (e) {
+      console.warn('[cookies] Failed to create ytdl agent:', e.message);
+    }
+  }
+  return undefined;
+}
+
+// Primary: use @distube/ytdl-core (pure Node.js)
 async function getStreamUrlYtdl(videoId) {
   const url = `https://www.youtube.com/watch?v=${videoId}`;
-  const info = await ytdl.getInfo(url);
+  const agent = getYtdlAgent();
+  const opts = agent ? { agent } : {};
+  const info = await ytdl.getInfo(url, opts);
+
   // Prefer muxed mp4 format (video+audio in one stream)
   const format = ytdl.chooseFormat(info.formats, {
     quality: 'highest',
     filter: (f) => f.container === 'mp4' && f.hasVideo && f.hasAudio,
   });
-  if (format && format.url) {
-    return format.url;
-  }
-  // Fallback: any format with both video and audio
+  if (format && format.url) return format.url;
+
+  // Fallback: any muxed format
   const fallback = ytdl.chooseFormat(info.formats, {
     quality: 'highest',
     filter: 'audioandvideo',
   });
-  if (fallback && fallback.url) {
-    return fallback.url;
-  }
+  if (fallback && fallback.url) return fallback.url;
+
   throw new Error('No suitable format found');
 }
 
-// Fallback: use yt-dlp (Python, different extraction method)
+// Fallback: use yt-dlp (Python)
 function getStreamUrlYtDlp(videoId) {
   return new Promise((resolve, reject) => {
+    // With cookies, specific muxed itags (22=720p, 18=360p) are more reliable
+    const formatStr = hasCookies() ? '22/18/best[ext=mp4]/best' : 'best[ext=mp4]/best';
     const args = [
-      '-f', 'best[ext=mp4]/best',
+      '-f', formatStr,
       '--get-url',
       '--no-warnings',
     ];
@@ -73,7 +117,7 @@ function getStreamUrlYtDlp(videoId) {
         if (err) {
           return reject(new Error(stderr || err.message));
         }
-        const url = stdout.trim();
+        const url = stdout.trim().split('\n')[0]; // Take first URL only
         if (!url) {
           return reject(new Error('No URL returned'));
         }
@@ -106,7 +150,7 @@ async function getStreamUrl(videoId) {
     }
   }
 
-  console.log(`[stream] Got URL for ${videoId} via ${source}`);
+  console.log(`[stream] Got URL for ${videoId} via ${source}${hasCookies() ? ' (with cookies)' : ''}`);
   urlCache.set(videoId, { url, time: Date.now() });
   return url;
 }
@@ -160,12 +204,6 @@ const stream = async (req, res) => {
   try {
     const videoUrl = await getStreamUrl(videoId);
 
-    // Direct redirect mode: zero server bandwidth (opt-in, may fail if URL is IP-restricted)
-    if (req.query.direct === '1') {
-      res.redirect(302, videoUrl);
-      return;
-    }
-
     // Default: proxy video through server
     const headers = {};
     if (req.headers.range) {
@@ -180,7 +218,7 @@ const stream = async (req, res) => {
   }
 };
 
-// Upload cookies via API
+// Upload cookies via API (Netscape cookies.txt format)
 const uploadCookies = async (req, res) => {
   const { cookies } = req.body;
   if (!cookies || typeof cookies !== 'string') {
@@ -190,18 +228,21 @@ const uploadCookies = async (req, res) => {
   try {
     fs.writeFileSync(COOKIES_PATH, cookies);
     urlCache.clear();
-    console.log('[yt-dlp] Cookies updated via API');
+    console.log('[cookies] Updated via API');
     res.json({ success: true, message: 'Cookies updated' });
   } catch (err) {
-    console.error('[yt-dlp] Cookie write error:', err.message);
+    console.error('[cookies] Write error:', err.message);
     res.status(500).json({ error: 'Failed to save cookies' });
   }
 };
 
 const cookieStatus = (req, res) => {
+  const has = hasCookies();
+  const parsed = has ? parseCookiesForYtdl() : null;
   res.json({
-    hasCookies: hasCookies(),
-    lastModified: hasCookies() ? fs.statSync(COOKIES_PATH).mtime.toISOString() : null,
+    hasCookies: has,
+    cookieCount: parsed ? parsed.length : 0,
+    lastModified: has ? fs.statSync(COOKIES_PATH).mtime.toISOString() : null,
   });
 };
 

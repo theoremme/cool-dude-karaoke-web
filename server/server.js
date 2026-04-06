@@ -22,6 +22,7 @@ const io = new Server(httpServer, {
 });
 
 // Middleware
+app.set('trust proxy', 1); // Railway runs behind a reverse proxy
 app.use(express.json());
 
 // Health check
