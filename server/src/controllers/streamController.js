@@ -34,7 +34,7 @@ function getStreamUrl(videoId) {
 
   return new Promise((resolve, reject) => {
     const args = [
-      '-f', 'b/best[ext=mp4]/best',
+      '-f', '22/18/b',
       '--get-url',
       '--no-warnings',
     ];
