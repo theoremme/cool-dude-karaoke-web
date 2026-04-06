@@ -266,12 +266,12 @@ const HostDashboard = () => {
     <div className="mobile-warning-overlay">
       <div className="auth-card" style={{ maxWidth: 380, textAlign: 'center' }}>
         <h2 style={{ fontFamily: 'Orbitron', fontSize: '1.3rem', marginBottom: 16 }}>Hey dude - you there?</h2>
-        <p style={{ color: '#888', marginBottom: 20, lineHeight: 1.5 }}>
-          No one's playing music or adding songs. This room will automatically close in{' '}
-          <span style={{ color: '#F56F27', fontFamily: 'Orbitron', fontWeight: 700 }}>
-            {Math.floor(inactivityWarning.remainingSeconds / 60)}:{String(inactivityWarning.remainingSeconds % 60).padStart(2, '0')}
-          </span>
+        <p style={{ color: '#888', marginBottom: 8, lineHeight: 1.5 }}>
+          No one's playing music or adding songs. This room will automatically close in
         </p>
+        <div style={{ color: '#F56F27', fontFamily: 'Orbitron', fontWeight: 700, fontSize: '2rem', marginBottom: 20 }}>
+          {Math.floor(inactivityWarning.remainingSeconds / 60)}:{String(inactivityWarning.remainingSeconds % 60).padStart(2, '0')}
+        </div>
         <button className="btn-neon" onClick={handleStillHere}>I'm still here!</button>
       </div>
     </div>

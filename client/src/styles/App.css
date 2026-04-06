@@ -1833,6 +1833,11 @@ body {
     margin-top: 4px;
   }
 
+  .vibe-item-actions .btn-small {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
   .guest-welcome-room {
     font-size: 1.2rem;
     letter-spacing: 0.1em;
@@ -2183,13 +2188,33 @@ body {
   text-overflow: ellipsis;
 }
 
+.closeout-flex-layout {
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
+}
+
+.closeout-flex-layout .closeout-setlist {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.closeout-flex-layout .closeout-song-list {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
 .closeout-new-room {
-  margin-top: 40px;
+  margin-top: 20px;
   padding: 14px 40px;
   font-size: 1rem;
   font-family: 'Orbitron', sans-serif;
   font-weight: 700;
   letter-spacing: 0.1em;
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {

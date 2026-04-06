@@ -289,7 +289,7 @@ const CloseoutPage = () => {
 
   return (
     <div className="app closeout-page">
-      <div className="closeout-container">
+      <div className="closeout-container closeout-flex-layout">
         <img src={logo} alt="Cool Dude Karaoke" className="closeout-logo" />
 
         <h1 className="closeout-title">Rad sesh, dude!</h1>
@@ -385,8 +385,8 @@ const CloseoutPage = () => {
           </div>
         </div>
 
-        <button className="btn-neon closeout-new-room" onClick={() => navigate('/login')}>
-          Open a New Room
+        <button className="btn-neon closeout-new-room" onClick={() => navigate('/')}>
+          Go to the Lobby
         </button>
       </div>
     </div>

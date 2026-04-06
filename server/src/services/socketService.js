@@ -6,10 +6,9 @@ const disconnectedUsers = new Map();
 const RECONNECT_GRACE_MS = 30000; // 30 seconds to reconnect
 
 // Auto-close inactive rooms to free WebSocket connections and save costs
-// TODO: restore to 10min/2min after testing
-const INACTIVITY_TIMEOUT = 2 * 60 * 1000;  // 2 minutes (testing)
-const WARNING_BEFORE = 30 * 1000;           // warn 30 seconds before close (testing)
-const CHECK_INTERVAL = 10 * 1000;           // check every 10 seconds (testing)
+const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+const WARNING_BEFORE = 2 * 60 * 1000;      // warn 2 minutes before close
+const CHECK_INTERVAL = 30 * 1000;          // check every 30 seconds
 const roomActivity = new Map(); // roomId → { lastActivity: timestamp, warned: boolean }
 
 function setupSocketHandlers(io) {
