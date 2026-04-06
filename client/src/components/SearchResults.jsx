@@ -1,17 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { usePlaylist } from '../contexts/PlaylistContext';
 
 const SearchResults = ({ results }) => {
   const { addItem, items } = usePlaylist();
+  const [addedIds, setAddedIds] = useState(new Set());
 
   if (results.length === 0) {
     return null;
   }
 
   const isInPlaylist = (videoId) =>
-    items.some((item) => item.videoId === videoId);
+    addedIds.has(videoId) || items.some((item) => item.videoId === videoId);
 
   const handleAdd = (video) => {
+    setAddedIds((prev) => new Set(prev).add(video.videoId));
     addItem(video);
   };
 

@@ -46,7 +46,6 @@ const VideoPlayer = ({ isHost = false }) => {
   const videoRef = useRef(null);
   const popoutRef = useRef(null);
   const popoutTimeRef = useRef(0);
-  const retriedProxyRef = useRef(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [poppedOut, setPoppedOut] = useState(false);
@@ -66,15 +65,6 @@ const VideoPlayer = ({ isHost = false }) => {
           setPlaying(false);
           break;
         case 'popout-error':
-          if (currentItem && !retriedProxyRef.current) {
-            retriedProxyRef.current = true;
-            popoutRef.current?.postMessage({
-              type: 'popout-load',
-              src: `/api/stream/${currentItem.videoId}?proxy=1`,
-              title: currentItem.title,
-            }, '*');
-            break;
-          }
           setError('Playback error in popout window.');
           break;
         case 'popout-time':
@@ -98,7 +88,6 @@ const VideoPlayer = ({ isHost = false }) => {
 
     setError(null);
     setLoading(true);
-    retriedProxyRef.current = false;
 
     if (poppedOut && popoutRef.current && !popoutRef.current.closed) {
       popoutRef.current.postMessage({
@@ -162,15 +151,6 @@ const VideoPlayer = ({ isHost = false }) => {
   const handlePause = () => setPlaying(false);
 
   const handleError = () => {
-    // If redirect to direct YouTube URL failed, retry through server proxy
-    if (currentItem && !retriedProxyRef.current) {
-      retriedProxyRef.current = true;
-      if (videoRef.current) {
-        videoRef.current.src = `/api/stream/${currentItem.videoId}?proxy=1`;
-        videoRef.current.load();
-      }
-      return;
-    }
     setLoading(false);
     setError('Failed to load video.');
   };

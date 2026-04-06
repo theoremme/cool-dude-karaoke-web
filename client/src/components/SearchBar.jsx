@@ -1,16 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 
 const SearchBar = ({ onSearch, onVibe, loading, vibeLoading }) => {
   const [query, setQuery] = useState('');
-  const lastSearchRef = useRef('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const trimmed = query.trim();
     if (!trimmed || loading || vibeLoading) return;
-    // Skip duplicate back-to-back searches (server cache handles it too, but saves the round-trip)
-    if (trimmed.toLowerCase() === lastSearchRef.current) return;
-    lastSearchRef.current = trimmed.toLowerCase();
     onSearch(trimmed);
   };
 

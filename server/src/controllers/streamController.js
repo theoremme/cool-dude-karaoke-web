@@ -113,18 +113,18 @@ const stream = async (req, res) => {
   try {
     const videoUrl = await getStreamUrl(videoId);
 
-    // Proxy mode: pipe video bytes through server (bandwidth-heavy fallback)
-    if (req.query.proxy === '1') {
-      const headers = {};
-      if (req.headers.range) {
-        headers.Range = req.headers.range;
-      }
-      proxyVideo(videoUrl, headers, res, req);
+    // Direct redirect mode: zero server bandwidth (opt-in, may fail if URL is IP-restricted)
+    if (req.query.direct === '1') {
+      res.redirect(302, videoUrl);
       return;
     }
 
-    // Default: redirect to direct YouTube URL (zero server bandwidth)
-    res.redirect(302, videoUrl);
+    // Default: proxy video through server
+    const headers = {};
+    if (req.headers.range) {
+      headers.Range = req.headers.range;
+    }
+    proxyVideo(videoUrl, headers, res, req);
   } catch (err) {
     console.error('Stream error:', err.message);
     if (!res.headersSent) {
