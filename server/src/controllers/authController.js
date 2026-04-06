@@ -1,9 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { validationResult } = require('express-validator');
-
-const prisma = new PrismaClient();
 
 const SALT_ROUNDS = 10;
 const JWT_EXPIRATION = '7d';

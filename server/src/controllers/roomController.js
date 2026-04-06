@@ -1,8 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { validationResult } = require('express-validator');
 const { generateInviteCode } = require('../utils/inviteCode');
-
-const prisma = new PrismaClient();
 
 const createRoom = async (req, res) => {
   const errors = validationResult(req);

@@ -1,6 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 
 // Track disconnected users for reconnection grace period
 // Map<memberId, { roomId, guestName, userId, timeoutId }>

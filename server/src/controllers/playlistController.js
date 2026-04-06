@@ -1,7 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../lib/prisma');
 const { validationResult } = require('express-validator');
-
-const prisma = new PrismaClient();
 
 const getPlaylist = async (req, res) => {
   try {

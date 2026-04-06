@@ -54,3 +54,18 @@ const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+// Graceful shutdown — clean up on Railway SIGTERM or local Ctrl+C
+async function shutdown(signal) {
+  console.log(`\n${signal} received. Shutting down gracefully...`);
+  httpServer.close(() => {
+    console.log('HTTP server closed');
+  });
+  const prisma = require('./src/lib/prisma');
+  await prisma.$disconnect();
+  console.log('Database disconnected');
+  process.exit(0);
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
