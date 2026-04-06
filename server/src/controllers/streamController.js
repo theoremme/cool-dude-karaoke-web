@@ -2,12 +2,29 @@ const { execFile } = require('child_process');
 const https = require('https');
 const http = require('http');
 const { URL } = require('url');
+const fs = require('fs');
+const path = require('path');
 
 const YT_DLP_PATH = process.env.YT_DLP_PATH || 'yt-dlp';
+const COOKIES_PATH = path.join(__dirname, '../../cookies.txt');
 
 // Cache extracted URLs (they last 4-6 hours)
 const urlCache = new Map();
 const CACHE_TTL = 3 * 60 * 60 * 1000; // 3 hours
+
+// Write cookies from env var on startup
+if (process.env.YT_COOKIES_BASE64) {
+  try {
+    fs.writeFileSync(COOKIES_PATH, Buffer.from(process.env.YT_COOKIES_BASE64, 'base64').toString('utf-8'));
+    console.log('[yt-dlp] Cookies loaded from YT_COOKIES_BASE64 env var');
+  } catch (e) {
+    console.error('[yt-dlp] Failed to write cookies from env:', e.message);
+  }
+}
+
+function hasCookies() {
+  return fs.existsSync(COOKIES_PATH);
+}
 
 function getStreamUrl(videoId) {
   const cached = urlCache.get(videoId);
@@ -16,14 +33,21 @@ function getStreamUrl(videoId) {
   }
 
   return new Promise((resolve, reject) => {
+    const args = [
+      '-f', 'best[ext=mp4]/best',
+      '--get-url',
+      '--no-warnings',
+    ];
+
+    if (hasCookies()) {
+      args.push('--cookies', COOKIES_PATH);
+    }
+
+    args.push(`https://www.youtube.com/watch?v=${videoId}`);
+
     execFile(
       YT_DLP_PATH,
-      [
-        '-f', 'best[ext=mp4]/best',
-        '--get-url',
-        '--no-warnings',
-        `https://www.youtube.com/watch?v=${videoId}`,
-      ],
+      args,
       { timeout: 15000 },
       (err, stdout, stderr) => {
         if (err) {
@@ -74,7 +98,6 @@ function proxyVideo(targetUrl, rangeHeaders, res, req) {
     }
   });
 
-  // Clean up if client disconnects
   req.on('close', () => {
     proxyReq.destroy();
   });
@@ -104,4 +127,30 @@ const stream = async (req, res) => {
   }
 };
 
-module.exports = { stream };
+// Upload cookies via API
+const uploadCookies = async (req, res) => {
+  const { cookies } = req.body;
+  if (!cookies || typeof cookies !== 'string') {
+    return res.status(400).json({ error: 'Cookies text is required' });
+  }
+
+  try {
+    fs.writeFileSync(COOKIES_PATH, cookies);
+    // Clear URL cache so new requests use fresh cookies
+    urlCache.clear();
+    console.log('[yt-dlp] Cookies updated via API');
+    res.json({ success: true, message: 'Cookies updated' });
+  } catch (err) {
+    console.error('[yt-dlp] Cookie write error:', err.message);
+    res.status(500).json({ error: 'Failed to save cookies' });
+  }
+};
+
+const cookieStatus = (req, res) => {
+  res.json({
+    hasCookies: hasCookies(),
+    lastModified: hasCookies() ? fs.statSync(COOKIES_PATH).mtime.toISOString() : null,
+  });
+};
+
+module.exports = { stream, uploadCookies, cookieStatus };
