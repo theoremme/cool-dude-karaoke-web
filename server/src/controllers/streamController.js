@@ -34,7 +34,8 @@ function getStreamUrl(videoId) {
 
   return new Promise((resolve, reject) => {
     const args = [
-      '--get-url',
+      '-f', '18/22/best[ext=mp4]/best',
+      '-j',
       '--no-warnings',
     ];
 
@@ -47,17 +48,22 @@ function getStreamUrl(videoId) {
     execFile(
       YT_DLP_PATH,
       args,
-      { timeout: 15000 },
+      { timeout: 30000, maxBuffer: 10 * 1024 * 1024 },
       (err, stdout, stderr) => {
         if (err) {
           return reject(new Error(stderr || err.message));
         }
-        const url = stdout.trim();
-        if (!url) {
-          return reject(new Error('No URL returned'));
+        try {
+          const info = JSON.parse(stdout);
+          const url = info.url || info.webpage_url;
+          if (!url) {
+            return reject(new Error('No URL in video info'));
+          }
+          urlCache.set(videoId, { url, time: Date.now() });
+          resolve(url);
+        } catch (e) {
+          reject(new Error('Failed to parse video info: ' + e.message));
         }
-        urlCache.set(videoId, { url, time: Date.now() });
-        resolve(url);
       }
     );
   });
