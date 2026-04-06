@@ -99,7 +99,7 @@ const stream = async (req, res) => {
   } catch (err) {
     console.error('Stream error:', err.message);
     if (!res.headersSent) {
-      res.status(500).json({ error: 'Failed to stream video' });
+      res.status(500).json({ error: 'Failed to stream video', detail: err.message });
     }
   }
 };
