@@ -14,6 +14,7 @@ import SearchBar from './SearchBar';
 import SearchResults from './SearchResults';
 import VibeSuggestions from './VibeSuggestions';
 import VideoPlayer from './VideoPlayer';
+import MobilePlayer from './MobilePlayer';
 import PlaylistQueue from './PlaylistQueue';
 import PlaylistSync from './PlaylistSync';
 import QRCodeDisplay from './QRCodeDisplay';
@@ -57,6 +58,7 @@ const HostDashboard = () => {
   const [copied, setCopied] = useState(false);
   const [members, setMembers] = useState([]);
   const [guestsExpanded, setGuestsExpanded] = useState(false);
+  const [mobilePlayerOpen, setMobilePlayerOpen] = useState(false);
 
   // Persist search/vibe state
   useEffect(() => {
@@ -375,6 +377,9 @@ const HostDashboard = () => {
             </div>
           </div>
         )}
+        {mobilePlayerOpen && (
+          <MobilePlayer onExit={() => setMobilePlayerOpen(false)} />
+        )}
         <div className="guest-view">
           <div className="guest-header">
             <img src={logo} alt="Cool Dude Karaoke" style={{ height: 180, marginBottom: 8 }} />
@@ -387,11 +392,20 @@ const HostDashboard = () => {
             </div>
           </div>
 
-          {currentItem && (
-            <div className="guest-now-playing">
+          {currentItem ? (
+            <div className="guest-now-playing" onClick={() => setMobilePlayerOpen(true)} style={{ cursor: 'pointer' }}>
               <div className="now-playing-label">NOW PLAYING</div>
               <div className="now-playing-title">{currentItem.title}</div>
               <div className="now-playing-channel">{currentItem.channelName}</div>
+              <div className="mobile-play-hint">Tap to watch</div>
+            </div>
+          ) : (
+            <div className="guest-now-playing" onClick={() => { if (items.length > 0) { setMobilePlayerOpen(true); } }} style={{ cursor: items.length > 0 ? 'pointer' : 'default' }}>
+              {items.length > 0 ? (
+                <>
+                  <div className="mobile-play-hint">Tap to play</div>
+                </>
+              ) : null}
             </div>
           )}
 
