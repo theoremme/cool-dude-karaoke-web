@@ -384,9 +384,14 @@ const HostDashboard = () => {
 
           <PlaylistQueue loading={playlistLoading} />
 
-          <QRCodeDisplay inviteCode={inviteCode} roomName={room?.name} />
-
-          {guestList}
+          <QRCodeDisplay
+            inviteCode={inviteCode}
+            roomName={room?.name}
+            members={consolidatedMembers}
+            guestsExpanded={guestsExpanded}
+            onToggleGuests={() => setGuestsExpanded((v) => !v)}
+            formatTime={formatTime}
+          />
 
           <div className="search-section">
             <SearchBar
