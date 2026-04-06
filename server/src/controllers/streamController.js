@@ -72,7 +72,8 @@ function getYtdlAgent() {
 async function getStreamUrlYtdl(videoId) {
   const url = `https://www.youtube.com/watch?v=${videoId}`;
   const agent = getYtdlAgent();
-  const opts = agent ? { agent } : {};
+  const opts = {};
+  if (agent) opts.agent = agent;
   const info = await ytdl.getInfo(url, opts);
 
   // Prefer muxed mp4 format (video+audio in one stream)
@@ -95,13 +96,16 @@ async function getStreamUrlYtdl(videoId) {
 // Fallback: use yt-dlp (Python)
 function getStreamUrlYtDlp(videoId) {
   return new Promise((resolve, reject) => {
-    // With cookies, specific muxed itags (22=720p, 18=360p) are more reliable
-    const formatStr = hasCookies() ? '22/18/best[ext=mp4]/best' : 'best[ext=mp4]/best';
     const args = [
-      '-f', formatStr,
+      '-f', 'best[ext=mp4]/best',
       '--get-url',
       '--no-warnings',
     ];
+
+    // Route through residential proxy to bypass datacenter IP detection
+    if (process.env.YT_PROXY) {
+      args.push('--proxy', process.env.YT_PROXY);
+    }
 
     if (hasCookies()) {
       args.push('--cookies', COOKIES_PATH);
