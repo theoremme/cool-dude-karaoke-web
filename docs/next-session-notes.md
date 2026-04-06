@@ -1,45 +1,42 @@
 # Next Session Notes
-## Updated: 2026-04-05
+## Updated: 2026-04-06
 
 ### Completed This Session
-- Deployed to Railway at cooldudekaraoke.com
-- Dockerfile with Node.js 20 + Python3/yt-dlp
-- Host mobile layout with desktop warning modal
-- Leave Room confirmation modal ("Callin' it quits?")
-- Lobby button on host header (navigates without closing room)
-- Active rooms on lobby page with rejoin capability
-- Video player loading spinner
-- Playlist/lobby loading states with spinners
-- Open Graph meta tags for link previews
-- Custom favicon (cyan diamond star)
-- Cookie infrastructure for yt-dlp (ready but not needed currently)
-- All logos switched to nobg variant
-- Orbitron font for auth/lobby headings
-- YouTube playlist publish flow tested end-to-end
+- Diagnosed Railway cost issue ($12/day → Prisma singleton, graceful shutdown)
+- Fixed join-room infinite loop (memory leak + blocked inactivity timer)
+- Room auto-close after 10 min inactivity with 2-min warning modal
+- Switched video extraction to @distube/ytdl-core (bypass YouTube bot detection)
+- Guest vibe support (was wired to no-op)
+- Fixed "Added" button flicker, mobile search lock, mobile guest auto-close
+- Closeout page: "Go to the Lobby", centered button, scrollable setlist
+- Mobile vibe button heights standardized
 
 ### Incomplete Tasks
-1. **Popout video elapsed time sync** — Was implemented but broke the inline player. Reverted. Needs careful re-implementation.
-2. **Unused files not cleaned up** — `server/src/services/streamService.js` (replaced by yt-dlp controller), default Vite scaffold files (`hero.png`, `react.svg`, `vite.svg`).
-3. **Vibe generation not tested end-to-end** — Requires `ANTHROPIC_API_KEY` in server/.env and Railway.
-4. **Room expiration cleanup** — Rooms expire after 24 hours but no cleanup job exists.
-5. **Settings panel not built** — No replacement for the removed desktop API key management.
+1. **ytdl-core verification** — Railway was down when the ytdl-core deploy queued. Need to verify video playback works with the new extractor. If ytdl-core also gets bot-detected, cookies are the remaining option.
+2. **Popout video elapsed time sync** — Still reverted from last session. Needs re-implementation.
+3. **Unused files not cleaned up** — `server/src/services/streamService.js` (replaced by yt-dlp/ytdl-core controller), default Vite scaffold files.
+4. **Vibe generation not tested end-to-end** — Requires `ANTHROPIC_API_KEY` in server/.env and Railway.
+5. **Room expiration cleanup** — Rooms expire after 24 hours but no cleanup job exists (auto-close handles active rooms, but expired inactive rooms stay in DB).
+6. **Settings panel not built** — No replacement for removed desktop API key management.
 
 ### Known Issues
-1. **yt-dlp cookies cause format errors** — `YT_COOKIES_BASE64` env var changes YouTube's available formats, breaking `best[ext=mp4]/best`. Currently working without cookies. If bot detection returns, need to find a format selector compatible with cookie auth.
+1. **YouTube bot detection on Railway** — yt-dlp gets flagged on Railway's datacenter IP. ytdl-core deployed as alternative but not yet verified. If both fail, cookie auth is needed.
 2. **OAuth token store is in-memory** — Tokens lost on server restart/redeploy.
 3. **Quota tracking resets on server restart** — Daily usage counter is in-memory.
-4. **No PWA manifest** — Phase 4 item, not started.
+4. **Debug logging verbose** — `[Activity]` logs on every touchRoom call. Should be reduced once auto-close is confirmed stable.
+5. **Video proxy bandwidth** — All video bytes still flow through Railway (302 redirect failed due to IP restrictions). This is the biggest remaining cost driver during active use.
 
 ### Pending Decisions
-- **Popout elapsed time approach** — Need a safe way to implement without touching the video loading/error path. Consider keeping it simpler (just popout, no time sync).
+- **If ytdl-core fails too** — Try cookies (previous attempts had format issues) or accept YouTube embed limitations
+- **Reduce debug logging** — Remove `[Activity]` verbose logging once auto-close is stable
 - **Phase priority** — Phase 4 (PWA/mobile), Phase 6 (polish), or continued bug fixing?
 
 ### Suggested Next Session Priorities
-1. Re-implement popout video elapsed time sync safely
-2. Clean up unused files
-3. Test vibe generation end-to-end
-4. Consider PWA manifest for mobile "Add to Home Screen"
-5. Add Google OAuth login option (replace email/password)
+1. Verify ytdl-core video playback on Railway (or fix if broken)
+2. Monitor Railway costs — should be significantly lower now
+3. Remove verbose debug logging if auto-close is stable
+4. Clean up unused files
+5. Consider PWA manifest for mobile "Add to Home Screen"
 
 ### Deployment Info
 - **URL:** https://www.cooldudekaraoke.com
@@ -49,8 +46,9 @@
 - **Auto-deploy:** Pushes to master trigger Railway deployment
 - **Google OAuth redirect URI (production):** https://www.cooldudekaraoke.com/api/youtube/oauth/callback
 - **Google OAuth:** Test user added; app in testing mode (<100 users)
+- **Note:** Railway was experiencing issues at end of session. Last deploy (85191a6) was queued.
 
 ### Services Running (Local)
-- **Backend:** `npm run dev:server` on port 3000 (nodemon)
-- **Frontend:** Vite dev server on port 5173
-- **Database:** Docker container `karaoke-postgres` on port 5432
+- **Backend:** `npm run dev:server` on port 3000 (nodemon) — not running
+- **Frontend:** Vite dev server on port 5173 — not running
+- **Database:** Docker container `karaoke-postgres` on port 5432 — running (up 40+ hours)
