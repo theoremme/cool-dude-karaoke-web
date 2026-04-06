@@ -35,7 +35,7 @@ const HostDashboard = () => {
   const { socket, isConnected } = useSocket();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { connectSocket, setPlaylist, clearPlaylist, items, currentItem } = usePlaylist();
+  const { connectSocket, setPlaylist, clearLocal, items, currentItem } = usePlaylist();
   const [playlistLoading, setPlaylistLoading] = useState(true);
   const isMobile = useIsMobile();
   const [showMobileWarning, setShowMobileWarning] = useState(true);
@@ -64,7 +64,7 @@ const HostDashboard = () => {
 
   // Clear stale playlist from previous room on mount
   useEffect(() => {
-    clearPlaylist();
+    clearLocal();
     setPlaylistLoading(true);
   }, [inviteCode]);
 

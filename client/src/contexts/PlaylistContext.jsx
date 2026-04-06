@@ -238,6 +238,11 @@ export function PlaylistProvider({ children }) {
     emitSocket('clear-playlist', {});
   }, [emitSocket]);
 
+  // Clear local state only — does NOT delete from server
+  const clearLocal = useCallback(() => {
+    dispatch({ type: 'CLEAR_PLAYLIST' });
+  }, []);
+
   const playIndex = useCallback((index) => {
     dispatch({ type: 'PLAY_INDEX', payload: index });
   }, []);
@@ -293,6 +298,7 @@ export function PlaylistProvider({ children }) {
     setPlaying,
     moveItem,
     clearPlaylist,
+    clearLocal,
     connectSocket,
     setPlaylist,
     setPlaybackState,

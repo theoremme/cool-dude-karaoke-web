@@ -30,7 +30,7 @@ const GuestView = () => {
   const { inviteCode } = useParams();
   const { socket, isConnected } = useSocket();
   const navigate = useNavigate();
-  const { addItem, addItems, items, currentItem, connectSocket, setPlaylist, setPlaybackState, clearPlaylist } = usePlaylist();
+  const { addItem, addItems, items, currentItem, connectSocket, setPlaylist, setPlaybackState, clearLocal } = usePlaylist();
   const [playlistLoading, setPlaylistLoading] = useState(true);
   const isMobile = useIsMobile();
   const prevItemsLength = useRef(items.length);
@@ -47,7 +47,7 @@ const GuestView = () => {
   // Fetch room info
   // Clear stale playlist on mount
   useEffect(() => {
-    clearPlaylist();
+    clearLocal();
     setPlaylistLoading(true);
   }, [inviteCode]);
 
