@@ -295,11 +295,13 @@ const VideoPlayer = ({ isHost = false }) => {
           {loading && (
             <div style={{
               position: 'absolute', inset: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'rgba(0,0,0,0.8)', color: '#00c8ff', fontSize: 16,
-              fontStyle: 'italic',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              background: 'rgba(0,0,0,0.85)', gap: 14,
             }}>
-              {loadingPhrase}
+              <div className="player-spinner"></div>
+              <div style={{ color: '#00c8ff', fontSize: 18, fontWeight: 700, letterSpacing: '0.03em' }}>
+                {loadingPhrase}
+              </div>
             </div>
           )}
         </div>
