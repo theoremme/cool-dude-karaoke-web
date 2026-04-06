@@ -97,7 +97,7 @@ async function getStreamUrlYtdl(videoId) {
 function getStreamUrlYtDlp(videoId) {
   return new Promise((resolve, reject) => {
     const args = [
-      '-f', 'best[ext=mp4]/best',
+      '-f', 'best[ext=mp4]/best/bv*[ext=mp4]',
       '--get-url',
       '--no-warnings',
     ];
@@ -279,6 +279,7 @@ const debugFormats = async (req, res) => {
   try {
     const dlpFormats = await new Promise((resolve, reject) => {
       const args = ['--list-formats', '--no-warnings'];
+      if (process.env.YT_PROXY) args.push('--proxy', process.env.YT_PROXY);
       if (hasCookies()) args.push('--cookies', COOKIES_PATH);
       args.push(`https://www.youtube.com/watch?v=${videoId}`);
       execFile(YT_DLP_PATH, args, { timeout: 15000 }, (err, stdout, stderr) => {
