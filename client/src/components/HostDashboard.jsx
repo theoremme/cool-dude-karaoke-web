@@ -21,7 +21,7 @@ import { usePlaylist } from '../contexts/PlaylistContext';
 import { useSocket } from '../hooks/useSocket';
 import { useAuth } from '../hooks/useAuth';
 import * as api from '../services/api';
-import logo from '../assets/cool-dude-karaoke-logo-v2.png';
+import logo from '../assets/cool-dude-karaoke-logo-v2-nobg.png';
 
 function loadHostState(inviteCode) {
   try {

@@ -6,8 +6,8 @@ import PlaylistQueue from './PlaylistQueue';
 import { usePlaylist } from '../contexts/PlaylistContext';
 import { useSocket } from '../hooks/useSocket';
 import * as api from '../services/api';
-import logo from '../assets/cool-dude-karaoke-logo-v2.png';
-import logoNoBg from '../assets/cool-dude-karaoke-logo-v2-nobg.png';
+import logo from '../assets/cool-dude-karaoke-logo-v2-nobg.png';
+
 
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= breakpoint);
@@ -172,7 +172,7 @@ const GuestView = () => {
       <div className="app app-page">
         <div className="guest-join">
           <div className="join-card">
-            <img src={logoNoBg} alt="Cool Dude Karaoke" className="auth-logo" />
+            <img src={logo} alt="Cool Dude Karaoke" className="auth-logo" />
             <div className="error-message">{roomError}</div>
           </div>
         </div>
@@ -185,7 +185,7 @@ const GuestView = () => {
       <div className="app app-page">
         <div className="guest-join">
           <div className="join-card">
-            <img src={logoNoBg} alt="Cool Dude Karaoke" className="auth-logo" />
+            <img src={logo} alt="Cool Dude Karaoke" className="auth-logo" />
             <h2>Join {room?.name || 'Karaoke Room'}</h2>
             <form onSubmit={handleJoin}>
               <div className="form-group">
