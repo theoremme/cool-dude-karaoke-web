@@ -12,9 +12,12 @@ const RoomLobby = () => {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState(null);
   const [activeRooms, setActiveRooms] = useState([]);
+  const [roomsLoading, setRoomsLoading] = useState(true);
 
   useEffect(() => {
-    api.getMyRooms().then((data) => setActiveRooms(data.rooms || []));
+    api.getMyRooms()
+      .then((data) => setActiveRooms(data.rooms || []))
+      .finally(() => setRoomsLoading(false));
   }, []);
 
   const handleCreate = async (e) => {
@@ -63,7 +66,14 @@ const RoomLobby = () => {
             </button>
           </div>
 
-          {activeRooms.length > 0 && (
+          {roomsLoading ? (
+            <div className="active-rooms">
+              <h2>Your Active Rooms</h2>
+              <div style={{ display: 'flex', justifyContent: 'center', padding: 16 }}>
+                <div className="player-spinner" />
+              </div>
+            </div>
+          ) : activeRooms.length > 0 ? (
             <div className="active-rooms">
               <h2>Your Active Rooms</h2>
               <div className="active-rooms-list">
@@ -82,7 +92,7 @@ const RoomLobby = () => {
                 ))}
               </div>
             </div>
-          )}
+          ) : null}
 
           {error && <div className="error-message">{error}</div>}
 

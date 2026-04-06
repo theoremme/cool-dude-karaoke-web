@@ -35,7 +35,8 @@ const HostDashboard = () => {
   const { socket, isConnected } = useSocket();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { connectSocket, setPlaylist, items, currentItem } = usePlaylist();
+  const { connectSocket, setPlaylist, clearPlaylist, items, currentItem } = usePlaylist();
+  const [playlistLoading, setPlaylistLoading] = useState(true);
   const isMobile = useIsMobile();
   const [showMobileWarning, setShowMobileWarning] = useState(true);
 
@@ -60,6 +61,12 @@ const HostDashboard = () => {
       }));
     } catch {}
   }, [results, vibeSuggestions, vibeTheme, inviteCode]);
+
+  // Clear stale playlist from previous room on mount
+  useEffect(() => {
+    clearPlaylist();
+    setPlaylistLoading(true);
+  }, [inviteCode]);
 
   // Fetch room and join via socket
   useEffect(() => {
@@ -97,7 +104,10 @@ const HostDashboard = () => {
 
     socket.on('room-updated', (data) => {
       if (data.room) setRoom(data.room);
-      if (data.playlist) setPlaylist(data.playlist);
+      if (data.playlist) {
+        setPlaylist(data.playlist);
+        setPlaylistLoading(false);
+      }
     });
 
     return () => {
@@ -241,7 +251,7 @@ const HostDashboard = () => {
             </div>
           )}
 
-          <PlaylistQueue />
+          <PlaylistQueue loading={playlistLoading} />
 
           <QRCodeDisplay inviteCode={inviteCode} roomName={room?.name} />
 
@@ -327,7 +337,7 @@ const HostDashboard = () => {
 
         <div className="panel-right">
           <QRCodeDisplay inviteCode={inviteCode} roomName={room?.name} />
-          <PlaylistQueue />
+          <PlaylistQueue loading={playlistLoading} />
           <PlaylistSync socket={socket} roomId={room?.id} />
         </div>
       </div>

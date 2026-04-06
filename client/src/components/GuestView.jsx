@@ -30,7 +30,8 @@ const GuestView = () => {
   const { inviteCode } = useParams();
   const { socket, isConnected } = useSocket();
   const navigate = useNavigate();
-  const { addItem, addItems, items, currentItem, connectSocket, setPlaylist, setPlaybackState } = usePlaylist();
+  const { addItem, addItems, items, currentItem, connectSocket, setPlaylist, setPlaybackState, clearPlaylist } = usePlaylist();
+  const [playlistLoading, setPlaylistLoading] = useState(true);
   const isMobile = useIsMobile();
   const prevItemsLength = useRef(items.length);
 
@@ -44,6 +45,12 @@ const GuestView = () => {
   const [roomError, setRoomError] = useState(null);
 
   // Fetch room info
+  // Clear stale playlist on mount
+  useEffect(() => {
+    clearPlaylist();
+    setPlaylistLoading(true);
+  }, [inviteCode]);
+
   useEffect(() => {
     api.getRoomByInviteCode(inviteCode)
       .then((data) => {
@@ -73,7 +80,10 @@ const GuestView = () => {
 
     socket.on('room-updated', (data) => {
       if (data.room) setRoom(data.room);
-      if (data.playlist) setPlaylist(data.playlist);
+      if (data.playlist) {
+        setPlaylist(data.playlist);
+        setPlaylistLoading(false);
+      }
     });
 
     socket.on('playback-sync', ({ currentIndex, isPlaying }) => {
@@ -224,7 +234,7 @@ const GuestView = () => {
             </div>
           )}
 
-          <PlaylistQueue guestMode />
+          <PlaylistQueue guestMode loading={playlistLoading} />
 
           <div className="search-section">
             <SearchBar
@@ -277,7 +287,7 @@ const GuestView = () => {
               <div className="now-playing-channel">{currentItem.channelName}</div>
             </div>
           )}
-          <PlaylistQueue guestMode />
+          <PlaylistQueue guestMode loading={playlistLoading} />
         </div>
       </div>
     </div>

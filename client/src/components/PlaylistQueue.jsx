@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { usePlaylist } from '../contexts/PlaylistContext';
 
-const PlaylistQueue = ({ guestMode = false }) => {
+const PlaylistQueue = ({ guestMode = false, loading = false }) => {
   const {
     items,
     currentIndex,
@@ -89,7 +89,12 @@ const PlaylistQueue = ({ guestMode = false }) => {
         )}
       </div>
 
-      {items.length === 0 ? (
+      {loading ? (
+        <div className="queue-empty">
+          <div className="player-spinner" style={{ margin: '20px auto' }} />
+          <p>Loading playlist...</p>
+        </div>
+      ) : items.length === 0 ? (
         <div className="queue-empty">
           <p>No songs in the queue</p>
           <p className="queue-empty-hint">
