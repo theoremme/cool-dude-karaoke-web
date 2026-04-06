@@ -34,7 +34,6 @@ const GuestView = () => {
   const { addItem, addItems, items, currentItem, connectSocket, setPlaylist, setPlaybackState, clearLocal } = usePlaylist();
   const [playlistLoading, setPlaylistLoading] = useState(true);
   const isMobile = useIsMobile();
-  const prevItemsLength = useRef(items.length);
 
   const savedState = loadGuestState(inviteCode);
   const [guestName, setGuestName] = useState(savedState?.guestName || '');
@@ -106,11 +105,19 @@ const GuestView = () => {
       navigate(`/closeout/${inviteCode}`);
     });
 
+    // Handle room-inactive on reconnect (mobile wakes up after auto-close)
+    socket.on('error', (data) => {
+      if (data?.message?.includes('inactive') || data?.message?.includes('not found')) {
+        navigate(`/closeout/${inviteCode}`);
+      }
+    });
+
     return () => {
       socket.off('playlist-updated');
       socket.off('room-updated');
       socket.off('playback-sync');
       socket.off('room-closed');
+      socket.off('error');
     };
   }, [socket, setPlaylist]);
 
@@ -126,16 +133,6 @@ const GuestView = () => {
       }));
     } catch {}
   }, [results, vibeSuggestions, vibeTheme, guestName, hasJoined, inviteCode]);
-
-  // On mobile, clear search/vibe results when a song is added so playlist shows at top
-  useEffect(() => {
-    if (isMobile && items.length > prevItemsLength.current) {
-      setResults([]);
-      setVibeSuggestions([]);
-      setVibeTheme(null);
-    }
-    prevItemsLength.current = items.length;
-  }, [items.length, isMobile]);
 
   // Connect socket to playlist context and re-join room (once per connection)
   const joinedSocketRef = useRef(false);

@@ -2215,6 +2215,7 @@ body {
   font-weight: 700;
   letter-spacing: 0.1em;
   flex-shrink: 0;
+  align-self: center;
 }
 
 @media (max-width: 768px) {
