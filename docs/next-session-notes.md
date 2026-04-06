@@ -2,51 +2,55 @@
 ## Updated: 2026-04-05
 
 ### Completed This Session
-- WebSocket real-time playlist sync (add/remove/reorder/clear)
-- sessionStorage persistence for playlist, search, vibe, and guest state
-- Responsive guest views (desktop two-panel, mobile single-column)
-- Guest playlist is read-only (controls deactivated, not removed)
-- "Added by" indicators on playlist items
-- Playback sync from host to guests (now playing indicator)
-- Leave Room → closeout page with "Rad sesh, dude!" splash
-- PDF keepsake download (dark theme, Orbitron font, Tron grid, logo)
-- YouTube playlist publishing via OAuth (working end-to-end)
-- Server-side search cache (4hr TTL, saves API quota)
-- Quota tracking with `/api/youtube/quota` endpoint
-- Client-side duplicate search prevention
-- Accent color updated to #F56F27
-- Nobg logo variant used on non-black backgrounds
+- Deployed to Railway at cooldudekaraoke.com
+- Dockerfile with Node.js 20 + Python3/yt-dlp
+- Host mobile layout with desktop warning modal
+- Leave Room confirmation modal ("Callin' it quits?")
+- Lobby button on host header (navigates without closing room)
+- Active rooms on lobby page with rejoin capability
+- Video player loading spinner
+- Playlist/lobby loading states with spinners
+- Open Graph meta tags for link previews
+- Custom favicon (cyan diamond star)
+- Cookie infrastructure for yt-dlp (ready but not needed currently)
+- All logos switched to nobg variant
+- Orbitron font for auth/lobby headings
+- YouTube playlist publish flow tested end-to-end
 
 ### Incomplete Tasks
-1. **Unused files not cleaned up** — `server/src/services/streamService.js` (replaced by yt-dlp), default Vite scaffold files (`hero.png`, `react.svg`, `vite.svg`) still present.
-2. **Vibe generation not tested end-to-end** — Requires `ANTHROPIC_API_KEY` in server/.env.
-3. **Settings panel not built** — No replacement for the removed desktop API key management.
+1. **Popout video elapsed time sync** — Was implemented but broke the inline player. Reverted. Needs careful re-implementation.
+2. **Unused files not cleaned up** — `server/src/services/streamService.js` (replaced by yt-dlp controller), default Vite scaffold files (`hero.png`, `react.svg`, `vite.svg`).
+3. **Vibe generation not tested end-to-end** — Requires `ANTHROPIC_API_KEY` in server/.env and Railway.
 4. **Room expiration cleanup** — Rooms expire after 24 hours but no cleanup job exists.
+5. **Settings panel not built** — No replacement for the removed desktop API key management.
 
 ### Known Issues
-1. **yt-dlp path hardcoded** — `streamController.js` defaults to local Windows path. Needs `YT_DLP_PATH` env var for deployment.
-2. **OAuth token store is in-memory** — Tokens lost on server restart. Fine for single-server, would need Redis or similar for multi-instance.
-3. **Quota tracking resets on server restart** — Daily usage counter is in-memory. Not critical but could lead to over-counting after restart.
+1. **yt-dlp cookies cause format errors** — `YT_COOKIES_BASE64` env var changes YouTube's available formats, breaking `best[ext=mp4]/best`. Currently working without cookies. If bot detection returns, need to find a format selector compatible with cookie auth.
+2. **OAuth token store is in-memory** — Tokens lost on server restart/redeploy.
+3. **Quota tracking resets on server restart** — Daily usage counter is in-memory.
 4. **No PWA manifest** — Phase 4 item, not started.
-5. **QR-CODE-IMPLEMENTATION.md and client/README.md** — Untracked scaffold/doc files in repo root.
 
 ### Pending Decisions
-- **Video player strategy for deployment** — yt-dlp needs to be installed on Railway (custom Dockerfile or Nixpacks). Alternative: popout player fallback.
-- **Phase priority** — Phase 4 (PWA/mobile), Phase 6 (polish), or Phase 7 (Railway deployment) next?
-- **Search cache persistence** — Currently in-memory. Worth adding Redis or SQLite cache if deploying multi-instance?
+- **Popout elapsed time approach** — Need a safe way to implement without touching the video loading/error path. Consider keeping it simpler (just popout, no time sync).
+- **Phase priority** — Phase 4 (PWA/mobile), Phase 6 (polish), or continued bug fixing?
 
 ### Suggested Next Session Priorities
-1. Clean up unused files (streamService.js, default Vite assets)
-2. Test vibe generation end-to-end
-3. Plan Railway deployment (yt-dlp dependency, env vars, Dockerfile)
+1. Re-implement popout video elapsed time sync safely
+2. Clean up unused files
+3. Test vibe generation end-to-end
 4. Consider PWA manifest for mobile "Add to Home Screen"
+5. Add Google OAuth login option (replace email/password)
 
-### Environment Setup
-- **Google OAuth**: Configured in Google Cloud Console. Test user added. Credentials in `server/.env` (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`).
-- **YouTube API quota**: Default 10,000 units/day. Search caching active. User plans to request quota increase from Google.
-- **Reminder**: If app approaches 100 OAuth users, start Google verification process.
+### Deployment Info
+- **URL:** https://www.cooldudekaraoke.com
+- **Platform:** Railway (Dockerfile-based deploy)
+- **Database:** Railway PostgreSQL (auto-provisioned)
+- **GitHub:** https://github.com/theoremme/cool-dude-karaoke-web.git (master branch)
+- **Auto-deploy:** Pushes to master trigger Railway deployment
+- **Google OAuth redirect URI (production):** https://www.cooldudekaraoke.com/api/youtube/oauth/callback
+- **Google OAuth:** Test user added; app in testing mode (<100 users)
 
-### Services Running
+### Services Running (Local)
 - **Backend:** `npm run dev:server` on port 3000 (nodemon)
 - **Frontend:** Vite dev server on port 5173
 - **Database:** Docker container `karaoke-postgres` on port 5432
