@@ -1,4 +1,5 @@
 const { execFile } = require('child_process');
+const ytdl = require('@distube/ytdl-core');
 const https = require('https');
 const http = require('http');
 const { URL } = require('url');
@@ -26,18 +27,36 @@ function hasCookies() {
   return fs.existsSync(COOKIES_PATH);
 }
 
-function getStreamUrl(videoId) {
-  const cached = urlCache.get(videoId);
-  if (cached && Date.now() - cached.time < CACHE_TTL) {
-    return Promise.resolve(cached.url);
+// Primary: use @distube/ytdl-core (pure Node.js, different API than yt-dlp)
+async function getStreamUrlYtdl(videoId) {
+  const url = `https://www.youtube.com/watch?v=${videoId}`;
+  const info = await ytdl.getInfo(url);
+  // Prefer muxed mp4 format (video+audio in one stream)
+  const format = ytdl.chooseFormat(info.formats, {
+    quality: 'highest',
+    filter: (f) => f.container === 'mp4' && f.hasVideo && f.hasAudio,
+  });
+  if (format && format.url) {
+    return format.url;
   }
+  // Fallback: any format with both video and audio
+  const fallback = ytdl.chooseFormat(info.formats, {
+    quality: 'highest',
+    filter: 'audioandvideo',
+  });
+  if (fallback && fallback.url) {
+    return fallback.url;
+  }
+  throw new Error('No suitable format found');
+}
 
+// Fallback: use yt-dlp (Python, different extraction method)
+function getStreamUrlYtDlp(videoId) {
   return new Promise((resolve, reject) => {
     const args = [
       '-f', 'best[ext=mp4]/best',
       '--get-url',
       '--no-warnings',
-      '--extractor-args', 'youtube:player_client=mediaconnect,tv_embedded,web',
     ];
 
     if (hasCookies()) {
@@ -58,11 +77,38 @@ function getStreamUrl(videoId) {
         if (!url) {
           return reject(new Error('No URL returned'));
         }
-        urlCache.set(videoId, { url, time: Date.now() });
         resolve(url);
       }
     );
   });
+}
+
+async function getStreamUrl(videoId) {
+  const cached = urlCache.get(videoId);
+  if (cached && Date.now() - cached.time < CACHE_TTL) {
+    return cached.url;
+  }
+
+  // Try ytdl-core first, fall back to yt-dlp
+  let url;
+  let source;
+  try {
+    url = await getStreamUrlYtdl(videoId);
+    source = 'ytdl-core';
+  } catch (ytdlErr) {
+    console.warn(`[stream] ytdl-core failed for ${videoId}: ${ytdlErr.message}`);
+    try {
+      url = await getStreamUrlYtDlp(videoId);
+      source = 'yt-dlp';
+    } catch (dlpErr) {
+      console.error(`[stream] yt-dlp also failed for ${videoId}: ${dlpErr.message}`);
+      throw new Error(`Both extractors failed. ytdl-core: ${ytdlErr.message} | yt-dlp: ${dlpErr.message}`);
+    }
+  }
+
+  console.log(`[stream] Got URL for ${videoId} via ${source}`);
+  urlCache.set(videoId, { url, time: Date.now() });
+  return url;
 }
 
 function proxyVideo(targetUrl, rangeHeaders, res, req) {
