@@ -140,11 +140,24 @@ const HostDashboard = () => {
       );
     });
 
+    // Handle room-inactive on reconnect (mobile wakes up after auto-close)
+    socket.on('error', (data) => {
+      if (data?.message?.includes('inactive') || data?.message?.includes('not found')) {
+        sessionStorage.setItem(`karaoke-closeout-${inviteCode}`, JSON.stringify({
+          roomName: room?.name || 'Karaoke Session',
+          playlist: items,
+          isGuest: false,
+        }));
+        navigate(`/closeout/${inviteCode}`);
+      }
+    });
+
     return () => {
       socket.off('playlist-updated');
       socket.off('room-updated');
       socket.off('user-joined');
       socket.off('user-left');
+      socket.off('error');
     };
   }, [socket, setPlaylist]);
 
