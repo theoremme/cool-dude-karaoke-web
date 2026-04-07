@@ -132,8 +132,10 @@ function getStreamUrlYtDlp(videoId) {
 }
 
 // Primary: use external extraction service (Cloud Run / clean IP)
+const DEFAULT_EXTRACTOR_URL = 'https://yt-extractor-100464855375.us-east1.run.app';
+
 async function getStreamUrlExtractor(videoId) {
-  const extractorUrl = process.env.EXTRACTOR_URL;
+  const extractorUrl = process.env.EXTRACTOR_URL || DEFAULT_EXTRACTOR_URL;
   if (!extractorUrl) throw new Error('EXTRACTOR_URL not configured');
 
   const headers = {};
@@ -159,17 +161,12 @@ async function getStreamUrl(videoId) {
   const errors = [];
 
   // 1. External extractor (Cloud Run — clean IP)
-  if (process.env.EXTRACTOR_URL) {
-    try {
-      console.log(`[stream] Trying extractor for ${videoId}: ${process.env.EXTRACTOR_URL}`);
-      url = await getStreamUrlExtractor(videoId);
-      source = 'extractor';
-    } catch (e) {
-      errors.push(`extractor: ${e.message}`);
-      console.warn(`[stream] extractor failed for ${videoId}: ${e.message}`);
-    }
-  } else {
-    console.warn('[stream] EXTRACTOR_URL not set, skipping external extractor');
+  try {
+    url = await getStreamUrlExtractor(videoId);
+    source = 'extractor';
+  } catch (e) {
+    errors.push(`extractor: ${e.message}`);
+    console.warn(`[stream] extractor failed for ${videoId}: ${e.message}`);
   }
 
   // 2. Local ytdl-core
