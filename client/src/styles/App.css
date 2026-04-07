@@ -2010,8 +2010,8 @@ body {
 }
 
 .mobile-player-btn {
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(0, 200, 255, 0.3);
+  background: none;
+  border: 2px solid rgba(0, 200, 255, 0.6);
   border-radius: 50%;
   color: #fff;
   cursor: pointer;
@@ -2021,30 +2021,30 @@ body {
 }
 
 .mobile-player-exit {
-  width: 40px;
-  height: 40px;
-  font-size: 18px;
+  width: 36px;
+  height: 36px;
+  font-size: 16px;
   align-self: flex-end;
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .mobile-player-center {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: 28px;
   flex: 1;
 }
 
 .mobile-player-playpause {
-  width: 64px;
-  height: 64px;
+  width: 68px;
+  height: 68px;
   font-size: 28px;
-  border-color: rgba(0, 200, 255, 0.5);
 }
 
 .mobile-player-skip {
-  width: 48px;
-  height: 48px;
+  width: 52px;
+  height: 52px;
   font-size: 20px;
 }
 
@@ -2476,5 +2476,70 @@ body {
 
   .closeout-actions {
     flex-direction: column;
+  }
+}
+
+/* Mobile landscape — prevent layout breakage */
+@media (max-height: 500px) and (orientation: landscape) {
+  .guest-header img,
+  .auth-logo,
+  .mobile-warning-card img {
+    height: 50px !important;
+    margin-bottom: 4px !important;
+  }
+
+  .guest-header h2 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+
+  .app-header {
+    padding: 4px 16px;
+  }
+
+  .app-logo.host-logo {
+    height: 60px !important;
+  }
+
+  .mobile-warning-card,
+  .auth-card,
+  .join-card {
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  .guest-now-playing {
+    padding: 6px 16px;
+  }
+
+  .guest-welcome-bar {
+    padding: 6px 16px;
+  }
+
+  .guest-welcome-room {
+    font-size: 1rem !important;
+  }
+
+  .qr-code-section {
+    padding: 8px;
+  }
+
+  .qr-code-wrapper canvas {
+    width: 80px !important;
+    height: 80px !important;
+  }
+
+  .qr-flipper {
+    width: 120px;
+    height: 110px;
+  }
+
+  .closeout-logo {
+    height: 60px !important;
+  }
+
+  .closeout-title {
+    font-size: 1.2rem !important;
   }
 }
