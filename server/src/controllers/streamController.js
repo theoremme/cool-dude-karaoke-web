@@ -226,6 +226,22 @@ function proxyVideo(targetUrl, rangeHeaders, res, req) {
       fwdHeaders['Content-Range'] = proxyRes.headers['content-range'];
     }
 
+    // Self-heal: if YouTube rejects a cached URL, clear it and retry
+    if ([403, 410].includes(proxyRes.statusCode)) {
+      proxyRes.resume();
+      const cacheKey = Object.keys(Object.fromEntries(urlCache)).find(
+        (k) => urlCache.get(k)?.url === targetUrl
+      );
+      if (cacheKey) {
+        console.log(`[stream] Clearing stale cached URL for ${cacheKey} (${proxyRes.statusCode})`);
+        urlCache.delete(cacheKey);
+      }
+      if (!res.headersSent) {
+        res.status(502).json({ error: 'Video URL expired, please retry' });
+      }
+      return;
+    }
+
     res.writeHead(proxyRes.statusCode, fwdHeaders);
     proxyRes.pipe(res);
   });

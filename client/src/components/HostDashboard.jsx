@@ -41,7 +41,7 @@ const HostDashboard = () => {
   const { socket, isConnected } = useSocket();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { connectSocket, setPlaylist, clearLocal, items, currentItem } = usePlaylist();
+  const { connectSocket, setPlaylist, setPlaybackState, clearLocal, items, currentItem } = usePlaylist();
   const [playlistLoading, setPlaylistLoading] = useState(true);
   const isMobile = useIsMobile();
   const [showMobileWarning, setShowMobileWarning] = useState(true);
@@ -142,6 +142,11 @@ const HostDashboard = () => {
       );
     });
 
+    // Sync playback state from other host sessions (e.g. desktop ↔ mobile)
+    socket.on('playback-sync', ({ currentIndex, isPlaying }) => {
+      setPlaybackState(currentIndex, isPlaying);
+    });
+
     // Handle room-inactive on reconnect (mobile wakes up after auto-close)
     socket.on('error', (data) => {
       if (data?.message?.includes('inactive') || data?.message?.includes('not found')) {
@@ -159,6 +164,7 @@ const HostDashboard = () => {
       socket.off('room-updated');
       socket.off('user-joined');
       socket.off('user-left');
+      socket.off('playback-sync');
       socket.off('error');
     };
   }, [socket, setPlaylist]);

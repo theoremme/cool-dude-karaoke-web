@@ -78,7 +78,7 @@ const PlaylistQueue = ({ guestMode = false, loading = false }) => {
             {items.length > 0 && (
               <>
                 <button className="btn-neon btn-small" onClick={togglePlay}>
-                  {isPlaying ? '⏸ Pause' : '▶ Play'}
+                  {isPlaying ? '❚❚ Pause' : '► Play'}
                 </button>
                 <button
                   className="btn-neon btn-small"
@@ -86,7 +86,7 @@ const PlaylistQueue = ({ guestMode = false, loading = false }) => {
                   disabled={currentIndex >= items.length - 1 && currentIndex !== -1}
                   title="Skip to next song"
                 >
-                  ⏭ Skip
+                  ►❚ Skip
                 </button>
                 <button
                   className="btn-neon btn-small btn-danger"
