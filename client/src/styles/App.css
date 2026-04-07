@@ -937,6 +937,31 @@ body {
   cursor: grabbing;
 }
 
+.queue-reorder-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.queue-reorder-btn {
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 10px;
+  padding: 2px 4px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.queue-reorder-btn:not(:disabled):active {
+  color: #00c8ff;
+}
+
+.queue-reorder-btn:disabled {
+  opacity: 0.2;
+}
+
 .queue-position {
   width: 20px;
   text-align: center;

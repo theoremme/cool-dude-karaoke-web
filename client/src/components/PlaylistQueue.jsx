@@ -1,5 +1,15 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { usePlaylist } from '../contexts/PlaylistContext';
+
+function useIsMobile(breakpoint = 768) {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= breakpoint);
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth <= breakpoint);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [breakpoint]);
+  return isMobile;
+}
 
 const PlaylistQueue = ({ guestMode = false, loading = false }) => {
   const {
@@ -15,6 +25,7 @@ const PlaylistQueue = ({ guestMode = false, loading = false }) => {
     userName,
   } = usePlaylist();
 
+  const isMobile = useIsMobile();
   const [dragIndex, setDragIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const dragCounter = useRef(0);
@@ -108,15 +119,29 @@ const PlaylistQueue = ({ guestMode = false, loading = false }) => {
               key={item.id}
               className={`queue-item ${index === currentIndex ? 'queue-item-active' : ''} ${dragOverIndex === index ? 'queue-item-dragover' : ''}`}
               onDoubleClick={!guestMode ? () => playIndex(index) : undefined}
-              draggable={!guestMode}
-              onDragStart={!guestMode ? (e) => handleDragStart(e, index) : undefined}
-              onDragEnd={!guestMode ? handleDragEnd : undefined}
-              onDragEnter={!guestMode ? (e) => handleDragEnter(e, index) : undefined}
-              onDragLeave={!guestMode ? handleDragLeave : undefined}
-              onDragOver={!guestMode ? handleDragOver : undefined}
-              onDrop={!guestMode ? handleDrop : undefined}
+              draggable={!guestMode && !isMobile}
+              onDragStart={!guestMode && !isMobile ? (e) => handleDragStart(e, index) : undefined}
+              onDragEnd={!guestMode && !isMobile ? handleDragEnd : undefined}
+              onDragEnter={!guestMode && !isMobile ? (e) => handleDragEnter(e, index) : undefined}
+              onDragLeave={!guestMode && !isMobile ? handleDragLeave : undefined}
+              onDragOver={!guestMode && !isMobile ? handleDragOver : undefined}
+              onDrop={!guestMode && !isMobile ? handleDrop : undefined}
             >
-              {!guestMode && <span className="queue-drag-handle" title="Drag to reorder">⠿</span>}
+              {!guestMode && !isMobile && <span className="queue-drag-handle" title="Drag to reorder">⠿</span>}
+              {!guestMode && isMobile && (
+                <div className="queue-reorder-btns">
+                  <button
+                    className="queue-reorder-btn"
+                    onClick={(e) => { e.stopPropagation(); if (index > 0) moveItem(index, index - 1); }}
+                    disabled={index === 0}
+                  >▲</button>
+                  <button
+                    className="queue-reorder-btn"
+                    onClick={(e) => { e.stopPropagation(); if (index < items.length - 1) moveItem(index, index + 1); }}
+                    disabled={index === items.length - 1}
+                  >▼</button>
+                </div>
+              )}
               <span className="queue-position">
                 {index === currentIndex && isPlaying ? '♪' : index + 1}
               </span>
