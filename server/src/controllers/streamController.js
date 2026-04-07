@@ -161,12 +161,15 @@ async function getStreamUrl(videoId) {
   // 1. External extractor (Cloud Run — clean IP)
   if (process.env.EXTRACTOR_URL) {
     try {
+      console.log(`[stream] Trying extractor for ${videoId}: ${process.env.EXTRACTOR_URL}`);
       url = await getStreamUrlExtractor(videoId);
       source = 'extractor';
     } catch (e) {
       errors.push(`extractor: ${e.message}`);
       console.warn(`[stream] extractor failed for ${videoId}: ${e.message}`);
     }
+  } else {
+    console.warn('[stream] EXTRACTOR_URL not set, skipping external extractor');
   }
 
   // 2. Local ytdl-core
