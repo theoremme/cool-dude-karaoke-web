@@ -160,10 +160,13 @@ const MobilePlayer = ({ onExit }) => {
 
           <div className="mobile-player-center">
             <button className="mobile-player-btn mobile-player-skip" onClick={() => { playNext(); resetHideTimer(); }}>
-              ⏭
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
             </button>
             <button className="mobile-player-btn mobile-player-playpause" onClick={() => { togglePlay(); resetHideTimer(); }}>
-              {isPlaying ? '⏸' : '▶'}
+              {isPlaying
+                ? <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                : <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+              }
             </button>
           </div>
 
