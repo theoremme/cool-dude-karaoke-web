@@ -85,7 +85,8 @@ const VibeSuggestionItem = ({ song, index, onShowVersions }) => {
       const query = `${song.title} ${song.artist} karaoke`;
       const results = await searchYouTube(query);
       if (results && results.length > 0) {
-        addItem(results[0]);
+        const best = results.find(r => r.embeddable !== false) || results[0];
+        addItem(best);
         setAdded(true);
       }
     } catch (e) {}
@@ -134,7 +135,8 @@ const VibeSuggestions = ({ theme, suggestions, onRequestMore, loadingMore }) => 
         const query = `${song.title} ${song.artist} karaoke`;
         const results = await searchYouTube(query);
         if (results && results.length > 0) {
-          addItem(results[0]);
+          const best = results.find(r => r.embeddable !== false) || results[0];
+          addItem(best);
         }
       } catch (e) {}
       setAddAllProgress(i + 1);

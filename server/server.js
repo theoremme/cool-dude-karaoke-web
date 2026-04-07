@@ -9,7 +9,8 @@ const authRoutes = require('./src/routes/auth');
 const roomRoutes = require('./src/routes/rooms');
 const youtubeRoutes = require('./src/routes/youtube');
 const vibeRoutes = require('./src/routes/vibe');
-const streamRoutes = require('./src/routes/stream');
+// Stream/extraction routes deactivated — violates YouTube ToS
+// const streamRoutes = require('./src/routes/stream');
 const syncRoutes = require('./src/routes/sync');
 const { setupSocketHandlers } = require('./src/services/socketService');
 
@@ -35,7 +36,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/youtube', youtubeRoutes);
 app.use('/api/vibe', vibeRoutes);
-app.use('/api/stream', streamRoutes);
+// app.use('/api/stream', streamRoutes); // Deactivated — YouTube ToS
 app.use('/api/sync', syncRoutes);
 
 // WebSocket handlers

@@ -183,12 +183,11 @@ const HostDashboard = () => {
       let seconds = remainingSeconds;
       countdownRef.current = setInterval(() => {
         seconds--;
+        setInactivityWarning({ remainingSeconds: Math.max(0, seconds) });
         if (seconds <= 0) {
           clearInterval(countdownRef.current);
           countdownRef.current = null;
-          return;
         }
-        setInactivityWarning({ remainingSeconds: seconds });
       }, 1000);
     });
 
@@ -393,7 +392,7 @@ const HostDashboard = () => {
             <div style={{ display: 'flex', gap: 10, marginTop: 8, width: '100%', justifyContent: 'space-between' }}>
               <button className="btn-lobby" style={{ position: 'static' }} onClick={() => navigate('/')}>Lobby</button>
               <button className="btn-leave-room" style={{ position: 'static' }} onClick={() => setShowLeaveModal(true)}>
-                Let's Bounce
+                Bail
               </button>
             </div>
           </div>
@@ -474,7 +473,7 @@ const HostDashboard = () => {
         <button className="btn-lobby" onClick={() => navigate('/')}>Lobby</button>
         <img src={logo} alt="Cool Dude Karaoke" className="app-logo host-logo" style={{ height: 240 }} />
         <button className="btn-leave-room" onClick={() => setShowLeaveModal(true)}>
-          Let's Bounce
+          Bail
         </button>
       </header>
 

@@ -1,25 +1,15 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { usePlaylist } from '../contexts/PlaylistContext';
-
-const LOADING_PHRASES = [
-  "Wheezin' the juice!",
-  'Hold on to your butts.',
-  'Party on, Wayne.',
-  'Bueller? Bueller?',
-  "I'll be back.",
-  'Be excellent to each other.',
-  "Rollin' with the homies.",
-];
+import YouTubeEmbed from './YouTubeEmbed';
 
 const MobilePlayer = ({ onExit }) => {
   const { currentItem, isPlaying, playNext, setPlaying, togglePlay, playIndex, items } = usePlaylist();
   const containerRef = useRef(null);
-  const videoRef = useRef(null);
+  const ytRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showControls, setShowControls] = useState(true);
   const hideTimerRef = useRef(null);
-  const [loadingPhrase] = useState(() => LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
 
   // Enter fullscreen + lock landscape on mount
   useEffect(() => {
@@ -60,23 +50,18 @@ const MobilePlayer = ({ onExit }) => {
     }
   }, []);
 
-  // Load video when currentItem changes
+  // When currentItem changes, reset state
   useEffect(() => {
-    if (!currentItem || !videoRef.current) return;
+    if (!currentItem) return;
     setError(null);
     setLoading(true);
-    videoRef.current.src = `/api/stream/${currentItem.videoId}`;
-    videoRef.current.load();
   }, [currentItem?.videoId]);
 
   // Sync play/pause
   useEffect(() => {
-    if (!videoRef.current || !currentItem) return;
-    if (isPlaying && videoRef.current.paused && videoRef.current.readyState >= 2) {
-      videoRef.current.play().catch(() => {});
-    } else if (!isPlaying && !videoRef.current.paused) {
-      videoRef.current.pause();
-    }
+    if (!currentItem || !ytRef.current) return;
+    if (isPlaying) ytRef.current.play();
+    else ytRef.current.pause();
   }, [isPlaying, currentItem]);
 
   // Auto-hide controls after 3s
@@ -108,42 +93,69 @@ const MobilePlayer = ({ onExit }) => {
     }
   };
 
-  const handleCanPlay = () => {
+  const handleReady = () => setLoading(false);
+  const handleEnded = () => playNext();
+  const handlePlay = () => { setPlaying(true); setLoading(false); };
+  const handlePause = () => setPlaying(false);
+
+  const handleEmbedBlocked = () => {
     setLoading(false);
-    if (isPlaying && videoRef.current) {
-      videoRef.current.play().catch(() => {});
-    }
+    setError('Can\'t play this one in-app');
   };
 
-  const handleEnded = () => playNext();
-  const handlePlay = () => setPlaying(true);
-  const handlePause = () => setPlaying(false);
-  const handleError = () => {
+  const handleEmbedError = () => {
     setLoading(false);
-    setError('Failed to load video');
+    setError('YouTube player error');
   };
+
+  const handleTogglePlay = () => {
+    togglePlay();
+    resetHideTimer();
+  };
+
+  const canEmbed = currentItem?.embeddable !== false;
 
   return (
     <div ref={containerRef} className="mobile-player" onClick={handleTap}>
-      <video
-        ref={videoRef}
-        className="mobile-player-video"
-        onCanPlay={handleCanPlay}
-        onEnded={handleEnded}
-        onPlay={handlePlay}
-        onPause={handlePause}
-        onError={handleError}
-        playsInline
-      />
+      {canEmbed && currentItem && (
+        <YouTubeEmbed
+          key={currentItem.videoId}
+          ref={ytRef}
+          videoId={currentItem.videoId}
+          controls={false}
+          onReady={handleReady}
+          onEnded={handleEnded}
+          onPlay={handlePlay}
+          onPause={handlePause}
+          onEmbedBlocked={handleEmbedBlocked}
+          onError={handleEmbedError}
+        />
+      )}
 
-      {loading && (
+      {!canEmbed && currentItem && (
         <div className="mobile-player-loading">
-          <div className="player-spinner"></div>
-          <div className="mobile-player-phrase">{loadingPhrase}</div>
+          <div className="mobile-player-phrase" style={{ color: '#F56F27' }}>Can't play this one in-app</div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn-neon btn-small" onClick={(e) => {
+              e.stopPropagation();
+              window.open(`https://www.youtube.com/watch?v=${currentItem.videoId}`, '_blank');
+            }}>
+              Watch on YouTube
+            </button>
+            <button className="btn-neon btn-small" onClick={(e) => { e.stopPropagation(); playNext(); }}>
+              Skip
+            </button>
+          </div>
         </div>
       )}
 
-      {error && (
+      {loading && canEmbed && (
+        <div className="mobile-player-loading">
+          <div className="player-spinner"></div>
+        </div>
+      )}
+
+      {error && canEmbed && (
         <div className="mobile-player-loading">
           <div className="mobile-player-phrase" style={{ color: '#F56F27' }}>{error}</div>
           <button className="btn-neon btn-small" onClick={(e) => { e.stopPropagation(); playNext(); }}>
@@ -152,7 +164,7 @@ const MobilePlayer = ({ onExit }) => {
         </div>
       )}
 
-      {showControls && !loading && (
+      {showControls && !loading && canEmbed && (
         <div className="mobile-player-controls" onClick={(e) => e.stopPropagation()}>
           <button className="mobile-player-btn mobile-player-exit" onClick={handleExit}>
             ✕
@@ -162,7 +174,7 @@ const MobilePlayer = ({ onExit }) => {
             <button className="mobile-player-btn mobile-player-skip" onClick={() => { playNext(); resetHideTimer(); }}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
             </button>
-            <button className="mobile-player-btn mobile-player-playpause" onClick={() => { togglePlay(); resetHideTimer(); }}>
+            <button className="mobile-player-btn mobile-player-playpause" onClick={handleTogglePlay}>
               {isPlaying
                 ? <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                 : <svg width="28" height="28" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>

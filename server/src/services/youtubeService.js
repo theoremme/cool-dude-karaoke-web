@@ -184,10 +184,10 @@ async function searchVideos(query, maxResults = 10) {
     return [];
   }
 
-  // API call: video details (1 unit)
+  // API call: video details + embed status (1 unit)
   const videoIds = searchData.items.map((item) => item.id.videoId).join(',');
   const detailParams = new URLSearchParams({
-    part: 'contentDetails',
+    part: 'contentDetails,status',
     id: videoIds,
     key: apiKey,
   });
@@ -195,10 +195,13 @@ async function searchVideos(query, maxResults = 10) {
   const detailData = await fetchJSON(`${YOUTUBE_API_BASE}/videos?${detailParams}`);
   trackQuota('videoDetails', 1);
 
-  const durationMap = {};
+  const detailMap = {};
   if (detailData.items) {
     for (const item of detailData.items) {
-      durationMap[item.id] = parseDuration(item.contentDetails.duration);
+      detailMap[item.id] = {
+        duration: parseDuration(item.contentDetails.duration),
+        embeddable: item.status?.embeddable ?? false,
+      };
     }
   }
 
@@ -206,7 +209,8 @@ async function searchVideos(query, maxResults = 10) {
     videoId: item.id.videoId,
     title: decodeHtmlEntities(item.snippet.title),
     thumbnail: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
-    duration: durationMap[item.id.videoId] || 0,
+    duration: detailMap[item.id.videoId]?.duration || 0,
+    embeddable: detailMap[item.id.videoId]?.embeddable ?? false,
     channelName: decodeHtmlEntities(item.snippet.channelTitle),
   }));
 

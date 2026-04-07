@@ -1,178 +1,41 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { usePlaylist } from '../contexts/PlaylistContext';
-
-const LOADING_PHRASES = [
-  "Wheezin' the juice!",
-  'Hold on to your butts.',
-  'Party on, Wayne.',
-  'Bueller? Bueller?',
-  "I'll be back.",
-  'Be excellent to each other.',
-  "Rollin' with the homies.",
-];
-
-function useLoadingPhrase(loading) {
-  const [phrase, setPhrase] = useState(() => LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
-  useEffect(() => {
-    if (!loading) return;
-    setPhrase(LOADING_PHRASES[Math.floor(Math.random() * LOADING_PHRASES.length)]);
-  }, [loading]);
-  return phrase;
-}
-
-const POPOUT_HTML = (videoSrc, title) => `<!DOCTYPE html>
-<html><head>
-<title>${title.replace(/"/g, '&quot;')}</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #000; overflow: hidden; }
-  video { width: 100vw; height: 100vh; object-fit: contain; }
-</style>
-</head><body>
-<video id="v" src="${videoSrc}" autoplay controls></video>
-<script>
-  const video = document.getElementById('v');
-  video.onended = () => window.opener?.postMessage({ type: 'popout-ended' }, '*');
-  video.onplay = () => window.opener?.postMessage({ type: 'popout-play' }, '*');
-  video.onpause = () => window.opener?.postMessage({ type: 'popout-pause' }, '*');
-  video.onerror = () => window.opener?.postMessage({ type: 'popout-error' }, '*');
-  window.addEventListener('message', (e) => {
-    if (e.data.type === 'popout-load') {
-      video.src = e.data.src;
-      document.title = e.data.title;
-      video.load();
-      if (e.data.startTime) {
-        video.addEventListener('canplay', function seek() {
-          video.currentTime = e.data.startTime;
-          video.removeEventListener('canplay', seek);
-        });
-      }
-    }
-    if (e.data.type === 'popout-play-cmd') video.play();
-    if (e.data.type === 'popout-pause-cmd') video.pause();
-    if (e.data.type === 'popout-get-time') {
-      window.opener?.postMessage({ type: 'popout-time', currentTime: video.currentTime }, '*');
-    }
-  });
-  window.onbeforeunload = () => {
-    window.opener?.postMessage({ type: 'popout-closed', currentTime: video.currentTime }, '*');
-  };
-</script>
-</body></html>`;
+import YouTubeEmbed from './YouTubeEmbed';
 
 const VideoPlayer = ({ isHost = false }) => {
   const { currentItem, isPlaying, playNext, setPlaying } = usePlaylist();
-  const videoRef = useRef(null);
-  const popoutRef = useRef(null);
-  const popoutTimeRef = useRef(0);
+  const ytRef = useRef(null);
   const [loading, setLoading] = useState(false);
-  const loadingPhrase = useLoadingPhrase(loading);
   const [error, setError] = useState(null);
   const [poppedOut, setPoppedOut] = useState(false);
 
-  // Listen for messages from popout window
-  useEffect(() => {
-    const handleMessage = (e) => {
-      if (!e.data?.type?.startsWith('popout-')) return;
-      switch (e.data.type) {
-        case 'popout-ended':
-          playNext();
-          break;
-        case 'popout-play':
-          setPlaying(true);
-          break;
-        case 'popout-pause':
-          setPlaying(false);
-          break;
-        case 'popout-error':
-          setError('Playback error in popout window.');
-          break;
-        case 'popout-time':
-          popoutTimeRef.current = e.data.currentTime || 0;
-          break;
-        case 'popout-closed':
-          popoutTimeRef.current = e.data.currentTime || 0;
-          setPoppedOut(false);
-          popoutRef.current = null;
-          break;
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [playNext, setPlaying]);
-
-  // When currentItem changes, update either inline video or popout
+  // When currentItem changes, reset state
   useEffect(() => {
     if (!currentItem) return;
-
     setError(null);
     setLoading(true);
+  }, [currentItem?.videoId]);
 
-    if (poppedOut && popoutRef.current && !popoutRef.current.closed) {
-      popoutRef.current.postMessage({
-        type: 'popout-load',
-        src: `/api/stream/${currentItem.videoId}`,
-        title: currentItem.title,
-      }, '*');
-      setLoading(false);
-    } else if (videoRef.current) {
-      const video = videoRef.current;
-      video.src = `/api/stream/${currentItem.videoId}`;
-      video.load();
-    }
-  }, [currentItem?.videoId, poppedOut]);
-
-  // Sync play/pause for inline player
+  // Sync play/pause with YouTube player
   useEffect(() => {
-    if (poppedOut) {
-      if (popoutRef.current && !popoutRef.current.closed) {
-        popoutRef.current.postMessage({
-          type: isPlaying ? 'popout-play-cmd' : 'popout-pause-cmd',
-        }, '*');
-      }
-      return;
-    }
-    if (!videoRef.current || !currentItem) return;
-    const video = videoRef.current;
-
-    if (isPlaying && video.paused && video.readyState >= 2) {
-      video.play().catch(() => {});
-    } else if (!isPlaying && !video.paused) {
-      video.pause();
-    }
+    if (poppedOut || !currentItem || !ytRef.current) return;
+    if (isPlaying) ytRef.current.play();
+    else ytRef.current.pause();
   }, [isPlaying, currentItem, poppedOut]);
 
-  // Check if popout was closed externally
-  useEffect(() => {
-    if (!poppedOut) return;
-    const check = setInterval(() => {
-      if (!popoutRef.current || popoutRef.current.closed) {
-        setPoppedOut(false);
-        popoutRef.current = null;
-      }
-    }, 500);
-    return () => clearInterval(check);
-  }, [poppedOut]);
-
-  const handleCanPlay = () => {
-    setLoading(false);
-    if (videoRef.current && popoutTimeRef.current > 0) {
-      videoRef.current.currentTime = popoutTimeRef.current;
-      popoutTimeRef.current = 0;
-    }
-    if (isPlaying && videoRef.current) {
-      videoRef.current.play().catch(() => {});
-    }
-  };
-
+  const handleReady = () => setLoading(false);
   const handleEnded = () => playNext();
-  const handlePlay = () => setPlaying(true);
+  const handlePlay = () => { setPlaying(true); setLoading(false); };
   const handlePause = () => setPlaying(false);
 
-  const handleError = () => {
+  const handleEmbedBlocked = () => {
     setLoading(false);
-    setError('Failed to load video.');
+    setError('This video can\'t be played in the app.');
+  };
+
+  const handleEmbedError = () => {
+    setLoading(false);
+    setError('YouTube player error.');
   };
 
   const handleWatchOnYouTube = () => {
@@ -183,57 +46,16 @@ const VideoPlayer = ({ isHost = false }) => {
 
   const handlePopout = useCallback(() => {
     if (!currentItem) return;
-
-    // Capture current time from inline player before popping out
-    const startTime = videoRef.current?.currentTime || 0;
-
-    const videoSrc = `/api/stream/${currentItem.videoId}`;
-    const html = POPOUT_HTML(videoSrc, currentItem.title);
-
-    const popup = window.open('', 'karaoke-popout', 'width=960,height=540,resizable=yes');
-    if (!popup) {
-      setError('Popup blocked. Please allow popups for this site.');
-      return;
-    }
-
-    popup.document.write(html);
-    popup.document.close();
-    popoutRef.current = popup;
+    window.open(
+      `https://www.youtube.com/watch?v=${currentItem.videoId}`,
+      'karaoke-popout',
+      'width=960,height=540,resizable=yes'
+    );
     setPoppedOut(true);
-
-    // Send the start time to the popout once it's ready
-    setTimeout(() => {
-      popup.postMessage({
-        type: 'popout-load',
-        src: videoSrc,
-        title: currentItem.title,
-        startTime,
-      }, '*');
-    }, 500);
-
-    // Pause inline video
-    if (videoRef.current) {
-      videoRef.current.pause();
-      videoRef.current.src = '';
-    }
   }, [currentItem]);
 
   const handlePopback = useCallback(() => {
-    // Request final time from popout before closing
-    if (popoutRef.current && !popoutRef.current.closed) {
-      popoutRef.current.postMessage({ type: 'popout-get-time' }, '*');
-      // Small delay to receive the time response before closing
-      setTimeout(() => {
-        if (popoutRef.current && !popoutRef.current.closed) {
-          popoutRef.current.close();
-        }
-        popoutRef.current = null;
-        setPoppedOut(false);
-      }, 100);
-    } else {
-      popoutRef.current = null;
-      setPoppedOut(false);
-    }
+    setPoppedOut(false);
   }, []);
 
   if (!currentItem) {
@@ -255,11 +77,16 @@ const VideoPlayer = ({ isHost = false }) => {
         <div className="player-popout-placeholder">
           <div className="popout-placeholder-content">
             <div className="popout-icon">⧉</div>
-            <div className="popout-label">Playing in popout window</div>
+            <div className="popout-label">Playing on YouTube</div>
             <div className="popout-title">{currentItem.title}</div>
-            <button className="btn-neon btn-small" onClick={handlePopback}>
-              ← Return to main window
-            </button>
+            <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+              <button className="btn-neon btn-small" onClick={handlePopback}>
+                Return to embed
+              </button>
+              <button className="btn-neon btn-small" onClick={() => playNext()}>
+                Skip
+              </button>
+            </div>
           </div>
         </div>
         <div className="player-info">
@@ -275,33 +102,48 @@ const VideoPlayer = ({ isHost = false }) => {
     <div className="video-player">
       <div className="player-wrapper">
         <div className="player-container">
-          <video
-            ref={videoRef}
-            style={{ width: '100%', height: '100%', background: '#000' }}
-            onCanPlay={handleCanPlay}
-            onEnded={handleEnded}
-            onPlay={handlePlay}
-            onPause={handlePause}
-            onError={handleError}
-            controls
-          />
+          {currentItem.embeddable !== false ? (
+            <YouTubeEmbed
+              key={currentItem.videoId}
+              ref={ytRef}
+              videoId={currentItem.videoId}
+              onReady={handleReady}
+              onEnded={handleEnded}
+              onPlay={handlePlay}
+              onPause={handlePause}
+              onEmbedBlocked={handleEmbedBlocked}
+              onError={handleEmbedError}
+            />
+          ) : (
+            <div style={{
+              width: '100%', height: '100%', background: '#000',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12,
+            }}>
+              <div style={{ color: '#F56F27', fontSize: 16, fontWeight: 600 }}>
+                This video can't be embedded
+              </div>
+              <button className="btn-neon btn-small" onClick={handleWatchOnYouTube}>
+                Watch on YouTube
+              </button>
+              <button className="btn-neon btn-small" onClick={() => playNext()}>
+                Skip
+              </button>
+            </div>
+          )}
           <button
             className="btn-popout-overlay"
             onClick={handlePopout}
-            title="Pop out player"
+            title="Open on YouTube"
           >
             ⧉
           </button>
-          {loading && (
+          {loading && currentItem.embeddable !== false && (
             <div style={{
               position: 'absolute', inset: 0,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               background: 'rgba(0,0,0,0.85)', gap: 14,
             }}>
               <div className="player-spinner"></div>
-              <div style={{ color: '#00c8ff', fontSize: 18, fontWeight: 700, letterSpacing: '0.03em' }}>
-                {loadingPhrase}
-              </div>
             </div>
           )}
         </div>
