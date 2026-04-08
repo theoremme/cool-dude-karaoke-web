@@ -43,7 +43,8 @@ model PlaylistItem {
   videoId     String   @map("video_id") @db.VarChar(20)
   title       String   @db.VarChar(255)
   thumbnailUrl String? @map("thumbnail_url") @db.VarChar(500)
-  duration    Int?
+  duration    String?  @db.VarChar(30)
+  embeddable  Boolean  @default(true)
   channelName String?  @map("channel_name") @db.VarChar(100)
   position    Int
   addedByName String?  @map("added_by_name") @db.VarChar(50)

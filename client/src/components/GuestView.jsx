@@ -47,6 +47,7 @@ const GuestView = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [roomError, setRoomError] = useState(null);
+  const [playbackMode, setPlaybackMode] = useState(null);
 
   // Fetch room info
   // Clear stale playlist on mount
@@ -90,8 +91,9 @@ const GuestView = () => {
       }
     });
 
-    socket.on('playback-sync', ({ currentIndex, isPlaying }) => {
+    socket.on('playback-sync', ({ currentIndex, isPlaying, mode }) => {
       setPlaybackState(currentIndex, isPlaying);
+      setPlaybackMode(mode || null);
     });
 
     socket.on('room-closed', (data) => {
@@ -277,7 +279,10 @@ const GuestView = () => {
 
           {currentItem && (
             <div className="guest-now-playing">
-              <div className="now-playing-label">NOW PLAYING</div>
+              <div className="now-playing-label">
+                {playbackMode === 'popout-youtube' || playbackMode === 'popup-youtube'
+                  ? 'PLAYING ON YOUTUBE' : 'NOW PLAYING'}
+              </div>
               <div className="now-playing-title">{currentItem.title}</div>
               <div className="now-playing-channel">{currentItem.channelName}</div>
             </div>
@@ -357,7 +362,10 @@ const GuestView = () => {
         <div className="panel-right">
           {currentItem && (
             <div className="guest-now-playing">
-              <div className="now-playing-label">NOW PLAYING</div>
+              <div className="now-playing-label">
+                {playbackMode === 'popout-youtube' || playbackMode === 'popup-youtube'
+                  ? 'PLAYING ON YOUTUBE' : 'NOW PLAYING'}
+              </div>
               <div className="now-playing-title">{currentItem.title}</div>
               <div className="now-playing-channel">{currentItem.channelName}</div>
             </div>

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { usePlaylist } from '../contexts/PlaylistContext';
+import { formatDuration } from '../services/durationParser';
 
 function useIsMobile(breakpoint = 768) {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= breakpoint);
@@ -155,7 +156,7 @@ const PlaylistQueue = ({ guestMode = false, loading = false }) => {
                   {item.title}
                 </p>
                 <p className="queue-item-meta">
-                  {item.channelName} · {item.duration}
+                  {item.channelName} · {formatDuration(item.duration)}
                   {item.addedByName && (
                     <span className={`queue-added-by ${userName && item.addedByName === userName ? 'queue-added-by-you' : ''}`}>
                       {' · '}{item.addedByName === userName ? 'You' : item.addedByName}

@@ -21,6 +21,8 @@ import QRCodeDisplay from './QRCodeDisplay';
 import { usePlaylist } from '../contexts/PlaylistContext';
 import { useSocket } from '../hooks/useSocket';
 import { useAuth } from '../hooks/useAuth';
+import { usePlaybackController } from '../hooks/usePlaybackController';
+import { PopoutManager } from '../services/popoutManager';
 import * as api from '../services/api';
 import logo from '../assets/cool-dude-karaoke-logo-v2-nobg.png';
 
@@ -59,6 +61,38 @@ const HostDashboard = () => {
   const [members, setMembers] = useState([]);
   const [guestsExpanded, setGuestsExpanded] = useState(false);
   const [mobilePlayerOpen, setMobilePlayerOpen] = useState(false);
+  const [showPopupBanner, setShowPopupBanner] = useState(
+    () => !sessionStorage.getItem('karaoke-popup-banner-dismissed')
+  );
+  const [showPopupHelp, setShowPopupHelp] = useState(false);
+
+  // Playback controller — manages popout window and YouTube timer
+  const popoutManagerRef = useRef(null);
+  if (!popoutManagerRef.current) popoutManagerRef.current = new PopoutManager();
+  const popoutManager = popoutManagerRef.current;
+
+  const { playNext } = usePlaylist();
+  const playbackController = usePlaybackController({
+    currentItem,
+    onAdvance: playNext,
+    popoutManager,
+  });
+
+  // Clean up popout on unmount
+  useEffect(() => {
+    return () => popoutManager.close();
+  }, [popoutManager]);
+
+  // Broadcast playback mode to other clients (guests see "Playing on YouTube" etc.)
+  useEffect(() => {
+    if (!socket || !room || !playbackController.mode) return;
+    socket.emit('playback-sync', {
+      roomId: room.id,
+      currentIndex: items.indexOf(currentItem),
+      isPlaying: true,
+      mode: playbackController.mode,
+    });
+  }, [playbackController.mode]);
 
   // Persist search/vibe state
   useEffect(() => {
@@ -143,8 +177,9 @@ const HostDashboard = () => {
     });
 
     // Sync playback state from other host sessions (e.g. desktop ↔ mobile)
-    socket.on('playback-sync', ({ currentIndex, isPlaying }) => {
+    socket.on('playback-sync', ({ currentIndex, isPlaying, mode }) => {
       setPlaybackState(currentIndex, isPlaying);
+      // mode is used for guest sync; host manages its own mode via playbackController
     });
 
     // Handle room-inactive on reconnect (mobile wakes up after auto-close)
@@ -333,6 +368,49 @@ const HostDashboard = () => {
     return Array.from(byName.values());
   }, [members]);
 
+  const handleDismissPopupBanner = () => {
+    setShowPopupBanner(false);
+    sessionStorage.setItem('karaoke-popup-banner-dismissed', '1');
+  };
+
+  const popupBanner = showPopupBanner && (
+    <div style={{
+      background: 'rgba(0,200,255,0.08)', border: '1px solid rgba(0,200,255,0.25)',
+      borderRadius: 8, padding: '10px 14px', margin: '8px 0', display: 'flex',
+      alignItems: 'center', gap: 10, fontSize: 13, color: '#ccc',
+    }}>
+      <span style={{ flex: 1 }}>
+        For the smoothest experience, allow popups from this site — some karaoke videos open in a separate window.
+      </span>
+      <button
+        onClick={() => setShowPopupHelp(true)}
+        style={{ background: 'none', border: 'none', color: '#00c8ff', cursor: 'pointer', fontSize: 12, whiteSpace: 'nowrap' }}
+      >
+        How?
+      </button>
+      <button
+        onClick={handleDismissPopupBanner}
+        style={{ background: 'none', border: 'none', color: '#666', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: 0 }}
+      >
+        ✕
+      </button>
+    </div>
+  );
+
+  const popupHelpModal = showPopupHelp && (
+    <div className="mobile-warning-overlay">
+      <div className="auth-card" style={{ maxWidth: 400, textAlign: 'left' }}>
+        <h2 style={{ fontFamily: 'Orbitron', fontSize: '1.1rem', marginBottom: 14 }}>Allow Popups</h2>
+        <div style={{ color: '#ccc', fontSize: 13, lineHeight: 1.7 }}>
+          <p style={{ marginBottom: 10 }}><strong style={{ color: '#00c8ff' }}>Chrome:</strong> Click the lock/tune icon in the address bar → Site settings → Pop-ups → Allow</p>
+          <p style={{ marginBottom: 10 }}><strong style={{ color: '#00c8ff' }}>Firefox:</strong> Click the shield icon in the address bar → Turn off blocking for this site</p>
+          <p style={{ marginBottom: 10 }}><strong style={{ color: '#00c8ff' }}>Safari:</strong> Safari → Settings → Websites → Pop-up Windows → Allow for this site</p>
+        </div>
+        <button className="btn-neon btn-small" style={{ marginTop: 10 }} onClick={() => setShowPopupHelp(false)}>Got it</button>
+      </div>
+    </div>
+  );
+
   const inactivityModal = inactivityWarning && (
     <div className="mobile-warning-overlay">
       <div className="auth-card" style={{ maxWidth: 380, textAlign: 'center' }}>
@@ -352,6 +430,7 @@ const HostDashboard = () => {
     return (
       <div className="app app-page">
         {inactivityModal}
+        {popupHelpModal}
         {showLeaveModal && (
           <div className="mobile-warning-overlay">
             <div className="mobile-warning-card">
@@ -383,7 +462,7 @@ const HostDashboard = () => {
           </div>
         )}
         {mobilePlayerOpen && (
-          <MobilePlayer onExit={() => setMobilePlayerOpen(false)} />
+          <MobilePlayer onExit={() => setMobilePlayerOpen(false)} playbackController={playbackController} />
         )}
         <div className="guest-view">
           <div className="guest-header">
@@ -425,6 +504,8 @@ const HostDashboard = () => {
             formatTime={formatTime}
           />
 
+          {popupBanner}
+
           <div className="search-section">
             <SearchBar
               onSearch={handleSearch}
@@ -457,6 +538,7 @@ const HostDashboard = () => {
   return (
     <div className="app host-dashboard">
       {inactivityModal}
+      {popupHelpModal}
       {showLeaveModal && (
         <div className="mobile-warning-overlay">
           <div className="auth-card" style={{ maxWidth: 380 }}>
@@ -479,7 +561,7 @@ const HostDashboard = () => {
 
       <div className="app-body">
         <div className="panel-left">
-          <VideoPlayer isHost={true} />
+          <VideoPlayer isHost={true} playbackController={playbackController} popoutManager={popoutManager} />
           <div className="search-section">
             <SearchBar
               onSearch={handleSearch}
@@ -515,6 +597,7 @@ const HostDashboard = () => {
             onToggleGuests={() => setGuestsExpanded((v) => !v)}
             formatTime={formatTime}
           />
+          {popupBanner}
           <PlaylistQueue loading={playlistLoading} />
           <PlaylistSync socket={socket} roomId={room?.id} />
         </div>

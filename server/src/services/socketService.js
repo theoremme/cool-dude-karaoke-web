@@ -219,7 +219,7 @@ function setupSocketHandlers(io) {
     });
 
     // Add song
-    socket.on('add-song', async ({ roomId, videoId, title, thumbnail, duration, channelName, addedByName }) => {
+    socket.on('add-song', async ({ roomId, videoId, title, thumbnail, duration, embeddable, channelName, addedByName }) => {
       try {
         const room = await prisma.room.findUnique({ where: { id: roomId } });
         if (!room || !room.isActive) {
@@ -240,6 +240,7 @@ function setupSocketHandlers(io) {
             title,
             thumbnailUrl: thumbnail,
             duration,
+            embeddable: embeddable !== false,
             channelName,
             addedByName,
             position,
@@ -373,8 +374,8 @@ function setupSocketHandlers(io) {
     });
 
     // Playback sync — host broadcasts current playback state to all guests
-    socket.on('playback-sync', ({ roomId, currentIndex, isPlaying }) => {
-      socket.to(roomId).emit('playback-sync', { currentIndex, isPlaying });
+    socket.on('playback-sync', ({ roomId, currentIndex, isPlaying, mode }) => {
+      socket.to(roomId).emit('playback-sync', { currentIndex, isPlaying, mode });
       touchRoom(roomId, 'playback-sync');
     });
 

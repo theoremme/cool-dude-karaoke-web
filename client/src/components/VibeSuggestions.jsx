@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { usePlaylist } from '../contexts/PlaylistContext';
+import { formatDuration } from '../services/durationParser';
 
 const searchYouTube = async (query) => {
   const res = await fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`);
@@ -56,7 +57,7 @@ const SongVersions = ({ song, onBack }) => {
                   {video.title}
                 </p>
                 <p className="vibe-version-meta">
-                  {video.channelName} · {video.duration}
+                  {video.channelName} · {formatDuration(video.duration)}
                 </p>
               </div>
               <button

@@ -7,6 +7,8 @@ import RoomLobby from './components/RoomLobby';
 import HostDashboard from './components/HostDashboard';
 import GuestView from './components/GuestView';
 import CloseoutPage from './components/CloseoutPage';
+import PopoutPlayer from './components/PopoutPlayer';
+import PlayerLoading from './components/PlayerLoading';
 import './styles/App.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -57,6 +59,8 @@ const AppRoutes = () => {
         path="/closeout/:inviteCode"
         element={<CloseoutPage />}
       />
+      <Route path="/player" element={<PopoutPlayer />} />
+      <Route path="/player-loading" element={<PlayerLoading />} />
     </Routes>
   );
 };

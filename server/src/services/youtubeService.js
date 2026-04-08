@@ -199,7 +199,7 @@ async function searchVideos(query, maxResults = 10) {
   if (detailData.items) {
     for (const item of detailData.items) {
       detailMap[item.id] = {
-        duration: parseDuration(item.contentDetails.duration),
+        duration: item.contentDetails.duration || null, // Raw ISO 8601 (e.g. "PT3M42S")
         embeddable: item.status?.embeddable ?? false,
       };
     }
@@ -209,7 +209,7 @@ async function searchVideos(query, maxResults = 10) {
     videoId: item.id.videoId,
     title: decodeHtmlEntities(item.snippet.title),
     thumbnail: item.snippet.thumbnails.medium?.url || item.snippet.thumbnails.default?.url,
-    duration: detailMap[item.id.videoId]?.duration || 0,
+    duration: detailMap[item.id.videoId]?.duration || null, // ISO 8601 string
     embeddable: detailMap[item.id.videoId]?.embeddable ?? false,
     channelName: decodeHtmlEntities(item.snippet.channelTitle),
   }));

@@ -12,6 +12,7 @@ function normalizeServerItems(serverItems) {
     title: item.title,
     thumbnail: item.thumbnailUrl || item.thumbnail_url || item.thumbnail,
     duration: item.duration,
+    embeddable: item.embeddable !== false,
     channelName: item.channelName || item.channel_name,
     addedByName: item.addedByName || item.added_by_name,
     addedAt: item.addedAt || item.added_at,
@@ -196,6 +197,7 @@ export function PlaylistProvider({ children }) {
       title: video.title,
       thumbnail: video.thumbnail,
       duration: video.duration,
+      embeddable: video.embeddable !== false,
       channelName: video.channelName,
       addedByName: userNameRef.current || 'Anonymous',
     });
@@ -210,6 +212,7 @@ export function PlaylistProvider({ children }) {
         title: video.title,
         thumbnail: video.thumbnail,
         duration: video.duration,
+        embeddable: video.embeddable !== false,
         channelName: video.channelName,
         addedByName: userNameRef.current || 'Anonymous',
       });

@@ -2,26 +2,43 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { usePlaylist } from '../contexts/PlaylistContext';
 import YouTubeEmbed from './YouTubeEmbed';
 
-const VideoPlayer = ({ isHost = false }) => {
+function formatCountdown(seconds) {
+  if (seconds == null) return '';
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+const VideoPlayer = ({ isHost = false, playbackController, popoutManager }) => {
   const { currentItem, isPlaying, playNext, setPlaying } = usePlaylist();
   const ytRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [poppedOut, setPoppedOut] = useState(false);
 
-  // When currentItem changes, reset state
+  const {
+    mode, timerSeconds, timerDisabled, popupBlocked, popupClosed,
+    playSong, skip, disableTimer, resumePlaylist, reopenPopup, retryPopup, handleEmbedBlocked: onEmbedBlocked,
+  } = playbackController || {};
+
+  // Trigger playSong when currentItem changes
+  useEffect(() => {
+    if (!currentItem || !playSong) return;
+    playSong(currentItem);
+  }, [currentItem?.videoId]);
+
+  // When currentItem changes, reset local state
   useEffect(() => {
     if (!currentItem) return;
     setError(null);
     setLoading(true);
   }, [currentItem?.videoId]);
 
-  // Sync play/pause with YouTube player
+  // Sync play/pause with YouTube player (iframe mode only)
   useEffect(() => {
-    if (poppedOut || !currentItem || !ytRef.current) return;
+    if (mode !== 'iframe' || !currentItem || !ytRef.current) return;
     if (isPlaying) ytRef.current.play();
     else ytRef.current.pause();
-  }, [isPlaying, currentItem, poppedOut]);
+  }, [isPlaying, currentItem, mode]);
 
   const handleReady = () => setLoading(false);
   const handleEnded = () => playNext();
@@ -30,7 +47,12 @@ const VideoPlayer = ({ isHost = false }) => {
 
   const handleEmbedBlocked = () => {
     setLoading(false);
-    setError('This video can\'t be played in the app.');
+    // Switch to YouTube popup/popout mode via playback controller
+    if (onEmbedBlocked) {
+      onEmbedBlocked();
+    } else {
+      setError('This video can\'t be embedded.');
+    }
   };
 
   const handleEmbedError = () => {
@@ -38,25 +60,18 @@ const VideoPlayer = ({ isHost = false }) => {
     setError('YouTube player error.');
   };
 
-  const handleWatchOnYouTube = () => {
-    if (currentItem) {
-      window.open(`https://www.youtube.com/watch?v=${currentItem.videoId}`, '_blank');
+  const handleTogglePopout = useCallback(() => {
+    if (!popoutManager) return;
+    if (popoutManager.isOpen()) {
+      popoutManager.close();
+      // Re-trigger playSong to switch back to iframe mode
+      if (currentItem) playSong(currentItem);
+    } else {
+      popoutManager.open();
+      // Re-trigger playSong to switch to popout mode
+      if (currentItem) setTimeout(() => playSong(currentItem), 300);
     }
-  };
-
-  const handlePopout = useCallback(() => {
-    if (!currentItem) return;
-    window.open(
-      `https://www.youtube.com/watch?v=${currentItem.videoId}`,
-      'karaoke-popout',
-      'width=960,height=540,resizable=yes'
-    );
-    setPoppedOut(true);
-  }, [currentItem]);
-
-  const handlePopback = useCallback(() => {
-    setPoppedOut(false);
-  }, []);
+  }, [popoutManager, currentItem, playSong]);
 
   if (!currentItem) {
     return (
@@ -71,19 +86,92 @@ const VideoPlayer = ({ isHost = false }) => {
     );
   }
 
-  if (poppedOut) {
+  // Popup blocked state
+  if (mode === 'popup-blocked') {
+    return (
+      <div className="video-player">
+        <div className="player-popout-placeholder">
+          <div className="popout-placeholder-content">
+            <div className="popout-icon" style={{ color: '#F56F27' }}>!</div>
+            <div className="popout-label">Popup was blocked</div>
+            <div className="popout-title" style={{ fontSize: 13, color: '#888', marginBottom: 12 }}>
+              Your browser blocked the video window. Allow popups and try again.
+            </div>
+            <button className="btn-neon btn-small" onClick={retryPopup}>
+              Open Song in New Window
+            </button>
+          </div>
+        </div>
+        <div className="player-info">
+          <div className="now-playing-label">NOW PLAYING</div>
+          <div className="now-playing-title">{currentItem.title}</div>
+          <div className="now-playing-channel">{currentItem.channelName}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // YouTube modes (popout-youtube or popup-youtube) — show countdown
+  if (mode === 'popout-youtube' || mode === 'popup-youtube') {
+    return (
+      <div className="video-player">
+        <div className="player-popout-placeholder" style={{ background: 'radial-gradient(ellipse at center, rgba(0,200,255,0.06) 0%, rgba(0,0,0,0.95) 70%)' }}>
+          <div className="popout-placeholder-content" style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 48, marginBottom: 4 }}>♪</div>
+            <div className="popout-title" style={{ fontSize: 18, fontWeight: 700, color: '#e0e0e0', marginBottom: 4 }}>
+              {currentItem.title}
+            </div>
+            <div style={{ color: '#888', fontSize: 13, marginBottom: 20 }}>{currentItem.channelName}</div>
+            {timerDisabled ? (
+              <>
+                <div style={{ color: '#888', fontSize: 13, marginBottom: 16, lineHeight: 1.5 }}>
+                  Timer paused — hit <strong style={{ color: '#00c8ff' }}>Resume Playlist</strong> when you're ready to keep going
+                </div>
+                <button className="btn-neon btn-small" onClick={resumePlaylist}>Resume Playlist</button>
+              </>
+            ) : timerSeconds != null ? (
+              <>
+                <div style={{ color: '#00c8ff', fontSize: 11, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 6 }}>
+                  Next song in
+                </div>
+                <div style={{
+                  fontFamily: 'Orbitron', fontSize: '3rem', fontWeight: 900, color: '#00c8ff',
+                  textShadow: '0 0 20px rgba(0,200,255,0.5), 0 0 40px rgba(0,200,255,0.2)',
+                  marginBottom: 16,
+                }}>
+                  {formatCountdown(timerSeconds)}
+                </div>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                  <button className="btn-neon btn-small" onClick={disableTimer}>Disable Timer</button>
+                  <button className="btn-neon btn-small" onClick={skip}>Skip Now</button>
+                </div>
+              </>
+            ) : null}
+          </div>
+        </div>
+        <div className="player-info">
+          <div className="now-playing-label">NOW PLAYING</div>
+          <div className="now-playing-title">{currentItem.title}</div>
+          <div className="now-playing-channel">{currentItem.channelName}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // Popout embed mode — video plays in popout, main app shows status
+  if (mode === 'popout-embed') {
     return (
       <div className="video-player">
         <div className="player-popout-placeholder">
           <div className="popout-placeholder-content">
             <div className="popout-icon">⧉</div>
-            <div className="popout-label">Playing on YouTube</div>
+            <div className="popout-label">Playing in popout window</div>
             <div className="popout-title">{currentItem.title}</div>
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button className="btn-neon btn-small" onClick={handlePopback}>
-                Return to embed
+              <button className="btn-neon btn-small" onClick={handleTogglePopout}>
+                Return to inline
               </button>
-              <button className="btn-neon btn-small" onClick={() => playNext()}>
+              <button className="btn-neon btn-small" onClick={skip}>
                 Skip
               </button>
             </div>
@@ -98,6 +186,7 @@ const VideoPlayer = ({ isHost = false }) => {
     );
   }
 
+  // Default: iframe mode — IFrame embed in main app
   return (
     <div className="video-player">
       <div className="player-wrapper">
@@ -119,21 +208,15 @@ const VideoPlayer = ({ isHost = false }) => {
               width: '100%', height: '100%', background: '#000',
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12,
             }}>
-              <div style={{ color: '#F56F27', fontSize: 16, fontWeight: 600 }}>
-                This video can't be embedded
+              <div style={{ color: '#00c8ff', fontSize: 16, fontWeight: 600 }}>
+                This video opens in a separate window
               </div>
-              <button className="btn-neon btn-small" onClick={handleWatchOnYouTube}>
-                Watch on YouTube
-              </button>
-              <button className="btn-neon btn-small" onClick={() => playNext()}>
-                Skip
-              </button>
             </div>
           )}
           <button
             className="btn-popout-overlay"
-            onClick={handlePopout}
-            title="Open on YouTube"
+            onClick={handleTogglePopout}
+            title={popoutManager?.isOpen() ? 'Close popout' : 'Open in popout window'}
           >
             ⧉
           </button>
@@ -152,10 +235,7 @@ const VideoPlayer = ({ isHost = false }) => {
         <div className="error-message" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
           <span>{error}</span>
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-            <button className="btn-neon btn-small" onClick={handleWatchOnYouTube}>
-              Watch on YouTube
-            </button>
-            <button className="btn-neon btn-small" onClick={() => playNext()}>
+            <button className="btn-neon btn-small" onClick={skip}>
               Skip
             </button>
           </div>

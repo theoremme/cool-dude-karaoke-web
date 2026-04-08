@@ -3,13 +3,7 @@ import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { jsPDF } from 'jspdf';
 import logo from '../assets/cool-dude-karaoke-logo-v2-nobg.png';
 import orbitronBoldUrl from '../assets/Orbitron-Bold.ttf';
-
-function formatDuration(seconds) {
-  if (!seconds && seconds !== 0) return '';
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
-}
+import { formatDuration } from '../services/durationParser';
 
 const CloseoutPage = () => {
   const { inviteCode } = useParams();
@@ -245,7 +239,7 @@ const CloseoutPage = () => {
       doc.text(title, margin + 10, y);
 
       // Duration
-      const dur = typeof item.duration === 'number' ? formatDuration(item.duration) : (item.duration || '');
+      const dur = formatDuration(item.duration);
       if (dur) {
         doc.setTextColor(100, 100, 110);
         doc.setFont('helvetica', 'normal');
