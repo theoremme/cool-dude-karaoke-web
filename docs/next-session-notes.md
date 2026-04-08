@@ -1,60 +1,61 @@
 # Next Session Notes
-## Updated: 2026-04-07 (Evening)
+## Updated: 2026-04-08 (Afternoon)
 
 ### Completed This Session
-- Hybrid IFrame + extraction fallback player (YouTube embed first, proxy fallback)
-- Embeddability detection at search time (zero extra quota cost)
-- Cool/Not Cool badges on search results with sorting
-- Vibe quick-add prefers embeddable videos
-- "Add it Anyway" button text for non-embeddable videos
-- "Let's Bounce" → "Bail"
-- Fixed inactivity countdown hanging on 0:01
+- Two-player refactor: removed all extraction code (Cloud Run, yt-dlp, ytdl-core, /api/stream)
+- Added popout window manager, /player route, usePlaybackController (5 modes)
+- Duration timer service (Date.now()-based, drift-resistant)
+- ISO 8601 duration stored in DB, parsed/formatted client-side
+- Persisted `embeddable` boolean on PlaylistItem in DB
+- Non-embeddable videos filtered from search results (embed-only for now)
+- Popup permission banner with browser-specific instructions
+- Playback mode synced to guests via Socket.io
+- Pushed to master, Railway deploying
 
 ### Incomplete Tasks (Carried Forward)
 1. **Remove verbose debug logging** — `[Activity]` logs on every touchRoom call
-2. **Clean up Railway env vars** — YT_PROXY, YT_COOKIES_BASE64, EXTRACTOR_URL no longer needed
-3. **Unused files** — `server/src/services/streamService.js`, `streamController.js`, `routes/stream.js` (deactivated), default Vite scaffold files
-4. **Vibe generation not tested e2e** — Requires ANTHROPIC_API_KEY
-5. **Room expiration cleanup** — Expired inactive rooms stay in DB
-6. **Docker image cleanup** — Python/yt-dlp can be removed from Dockerfile entirely now
-7. **Cloud Run extractor** — Still deployed but no longer called. Can be shut down to save resources.
-8. **`embeddable` flag not persisted to DB** — On page refresh/guest join, player defaults to trying embed for all videos
+2. **Clean up Railway env vars** — YT_PROXY, YT_COOKIES_BASE64, EXTRACTOR_URL, EXTRACTOR_API_KEY no longer needed
+3. **Vibe generation not tested e2e** — Requires ANTHROPIC_API_KEY
+4. **Room expiration cleanup** — Expired inactive rooms stay in DB
+5. **Docker image cleanup** — Python/yt-dlp can be removed from Dockerfile since extraction is gone
+6. **Cloud Run extractor** — Still deployed but no longer called. Can be shut down.
+7. **Unused CSS** — `.result-card-no-embed`, `.result-embed-warning`, `.result-badge*` classes still in App.css
 
 ### Known Issues
-1. **Hardcoded Cloud Run URL** — `DEFAULT_EXTRACTOR_URL` in streamController.js
-2. **Mobile landscape lock** — `screen.orientation.lock()` doesn't work on iOS Safari
-3. **OAuth token store in-memory** — Lost on restart
-4. **Quota tracking resets on restart** — In-memory counter
-5. **Cloud Run cold starts** — First request after idle may be slow (~2-3s)
-6. **Popout player uses YouTube embed for embeddable videos** — Shows YouTube branding/controls in popout. User may want cleaner experience but extraction-first defeats the purpose of reducing extraction load.
-7. **`embeddable` flag not persisted to DB** — Playlist items from server sync don't have the flag. Player defaults to trying embed (correct behavior, but causes brief embed-fail-then-proxy for non-embeddable videos on page refresh/guest join).
+1. **Mobile landscape lock** — `screen.orientation.lock()` doesn't work on iOS Safari
+2. **OAuth token store in-memory** — Lost on restart
+3. **Quota tracking resets on restart** — In-memory counter
+4. **Non-embeddable videos hidden** — ~30-40% of karaoke catalog not available. YouTube popup approach tested but UX was poor (buffering, no fullscreen control, timer sync issues)
+5. **YouTube popup code dormant** — All 5 playback modes implemented but YouTube modes won't trigger since non-embeddable videos are filtered from search results
+
+### Research In Progress
+- **KaraFun OEM API** — User wants to research integration. Email business@karafun.com for partnership terms. Full catalog/streaming/lyrics. Could solve the non-embeddable gap.
 
 ### Suggested Next Session Priorities
-1. Test hybrid player in production (deploy and monitor)
-2. Monitor Railway costs and 429 frequency — should be much lower now
-3. Remove verbose debug logging and debug endpoints
-4. Clean up unused env vars and files
-5. Consider adding `embeddable` column to PlaylistItem if the embed-fail flicker is noticeable
-6. Consider PWA manifest for mobile "Add to Home Screen"
+1. **KaraFun integration research** — User's stated next priority
+2. Verify Railway deployment is healthy (extraction code removed, migrations applied)
+3. Clean up Railway env vars (extraction-related)
+4. Remove Python/yt-dlp from Dockerfile to reduce image size
+5. Shut down Cloud Run extractor service
+6. Remove unused CSS classes from App.css
 
 ### Future Feature Ideas
-- **KaraFun OEM API** — Email business@karafun.com for partnership terms. Full catalog/streaming/lyrics.
-- **Spotify fallback** — Spotify has karaoke tracks. Web Playback SDK requires Premium. Audio-only (needs lyrics UI).
-- **YouTube-managed playlists (Option J)** — Rooms create YouTube playlists, API controls. High quota cost.
+- **KaraFun OEM API** — Full catalog/streaming/lyrics via B2B partnership
+- **Spotify fallback** — Spotify has karaoke tracks. Web Playback SDK requires Premium. Audio-only.
 - **Traffic analytics** — Plausible/Umami
 - **Access control** — Email whitelist/waitlist
+- **PWA manifest** — Mobile "Add to Home Screen"
 
 ### Deployment Info
 - **URL:** https://www.cooldudekaraoke.com
-- **Platform:** Railway (Dockerfile) + Google Cloud Run (extractor)
-- **Extractor:** https://yt-extractor-100464855375.us-east1.run.app
+- **Platform:** Railway (Dockerfile)
 - **Database:** Railway PostgreSQL
 - **GitHub:** https://github.com/theoremme/cool-dude-karaoke-web.git (master branch)
 - **Auto-deploy:** Pushes to master trigger Railway deployment
-- **Google Cloud:** User has billing set up with $300 free credits
+- **Cloud Run extractor:** Still deployed but unused — can be shut down
 
 ### Services
-- **Railway web service:** deployed, running
-- **Cloud Run extractor:** deployed, running
+- **Railway web service:** deploying (push just sent)
+- **Cloud Run extractor:** deployed but no longer called
 - **Local Docker (karaoke-postgres):** running
 - **Local dev servers:** running (backend :3000, frontend :5174)
