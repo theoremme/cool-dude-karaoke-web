@@ -618,6 +618,14 @@ const HostDashboard = () => {
         </button>
       </header>
 
+      {playbackMode !== 'amped' && (
+        <a href="https://github.com/theoremme/cool-dude-karaoke/releases/latest" target="_blank" rel="noopener noreferrer" className="amped-banner">
+          <span className="amped-banner-icon">⚡</span>
+          <span className="amped-banner-text"><strong>Dude, Where's My Song?</strong> Grab the Amped app for the full set.</span>
+          <span className="amped-banner-cta">Download</span>
+        </a>
+      )}
+
       <div className="app-body">
         <div className="panel-left">
           <VideoPlayer isHost={true} playbackController={playbackController} popoutManager={popoutManager} playbackMode={playbackMode} socket={socket} roomId={room?.id} ampedDisconnected={ampedDisconnected} onSwitchToWeb={() => {

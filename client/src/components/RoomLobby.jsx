@@ -146,6 +146,12 @@ const RoomLobby = () => {
               </button>
             </form>
           </div>
+
+          <a href="https://github.com/theoremme/cool-dude-karaoke/releases/latest" target="_blank" rel="noopener noreferrer" className="amped-banner amped-banner-card">
+            <span className="amped-banner-icon">⚡</span>
+            <span className="amped-banner-text"><strong>Dude, Where's My Song?</strong> Grab the Amped app for the full set.</span>
+            <span className="amped-banner-cta">Download</span>
+          </a>
         </div>
       </div>
     </div>

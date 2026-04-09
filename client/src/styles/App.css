@@ -2078,6 +2078,69 @@ body {
   box-shadow: 0 0 10px rgba(245, 111, 39, 0.3);
 }
 
+/* ==================== AMPED DOWNLOAD BANNER ==================== */
+.amped-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  background: linear-gradient(90deg, rgba(0, 200, 255, 0.08) 0%, rgba(157, 0, 255, 0.08) 100%);
+  border-top: 1px solid rgba(0, 200, 255, 0.15);
+  border-bottom: 1px solid rgba(0, 200, 255, 0.15);
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  z-index: 1;
+}
+
+.amped-banner:hover {
+  background: linear-gradient(90deg, rgba(0, 200, 255, 0.14) 0%, rgba(157, 0, 255, 0.14) 100%);
+}
+
+.amped-banner-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.amped-banner-text {
+  flex: 1;
+  color: #ccc;
+  font-size: 13px;
+}
+
+.amped-banner-text strong {
+  color: #00c8ff;
+}
+
+.amped-banner-cta {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #ff40ff;
+  text-shadow: 0 0 8px rgba(255, 64, 255, 0.4);
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 64, 255, 0.3);
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.amped-banner:hover .amped-banner-cta {
+  border-color: #ff40ff;
+  box-shadow: 0 0 12px rgba(255, 64, 255, 0.3);
+}
+
+/* Variant for inside a card (lobby) */
+.amped-banner-card {
+  margin-top: 24px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 200, 255, 0.12);
+  padding: 14px 16px;
+}
+
 /* ==================== HOST MOBILE WARNING ==================== */
 .mobile-warning-overlay {
   position: fixed;
