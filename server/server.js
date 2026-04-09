@@ -15,9 +15,14 @@ const { setupSocketHandlers } = require('./src/services/socketService');
 const app = express();
 const httpServer = createServer(app);
 
-// Socket.io - no CORS needed (same origin on Railway)
+// CORS — needed for Electron (cross-origin) and local dev
+const cors = require('cors');
+app.use(cors());
+
+// Socket.io — allow cross-origin connections from Electron
 const io = new Server(httpServer, {
   transports: ['websocket', 'polling'],
+  cors: { origin: '*' },
 });
 
 // Middleware

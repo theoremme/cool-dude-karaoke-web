@@ -9,7 +9,7 @@ function formatCountdown(seconds) {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-const VideoPlayer = ({ isHost = false, playbackController, popoutManager }) => {
+const VideoPlayer = ({ isHost = false, playbackController, popoutManager, playbackMode, socket, roomId }) => {
   const { currentItem, isPlaying, playNext, setPlaying } = usePlaylist();
   const ytRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -20,11 +20,11 @@ const VideoPlayer = ({ isHost = false, playbackController, popoutManager }) => {
     playSong, skip, disableTimer, resumePlaylist, reopenPopup, retryPopup, handleEmbedBlocked: onEmbedBlocked,
   } = playbackController || {};
 
-  // Trigger playSong when currentItem changes
+  // Trigger playSong when currentItem changes (skip in amped mode — Electron handles it)
   useEffect(() => {
-    if (!currentItem || !playSong) return;
+    if (!currentItem || !playSong || playbackMode === 'amped') return;
     playSong(currentItem);
-  }, [currentItem?.videoId]);
+  }, [currentItem?.videoId, playbackMode]);
 
   // When currentItem changes, reset local state
   useEffect(() => {
@@ -82,6 +82,60 @@ const VideoPlayer = ({ isHost = false, playbackController, popoutManager }) => {
             <p>Add songs and hit play to start the party!</p>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Amped mode — Electron desktop app owns playback
+  if (playbackMode === 'amped') {
+    const sendCommand = (command) => {
+      if (socket && roomId) {
+        socket.emit('playback-command', { roomId, command });
+      }
+    };
+
+    return (
+      <div className="video-player">
+        <div className="player-popout-placeholder" style={{
+          background: 'radial-gradient(ellipse at center, rgba(157,0,255,0.08) 0%, rgba(0,0,0,0.95) 70%)',
+        }}>
+          <div className="popout-placeholder-content" style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 36, marginBottom: 8, color: '#ff40ff' }}>⚡</div>
+            <div style={{
+              color: '#ff40ff', fontSize: 14, fontWeight: 700, textTransform: 'uppercase',
+              letterSpacing: 2, marginBottom: 8,
+              textShadow: '0 0 10px rgba(255, 64, 255, 0.5)',
+            }}>
+              Amped Mode
+            </div>
+            <div style={{ color: '#888', fontSize: 13, marginBottom: 16 }}>
+              Playing on the desktop app
+            </div>
+            {currentItem && (
+              <>
+                <div style={{ fontSize: 15, fontWeight: 600, color: '#e0e0e0', marginBottom: 4 }}>
+                  {currentItem.title}
+                </div>
+                <div style={{ color: '#666', fontSize: 12, marginBottom: 16 }}>{currentItem.channelName}</div>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
+                  <button className="btn-neon btn-small" onClick={() => sendCommand(isPlaying ? 'pause' : 'play')}>
+                    {isPlaying ? '⏸ Pause' : '▶ Play'}
+                  </button>
+                  <button className="btn-neon btn-small" onClick={() => sendCommand('skip')}>
+                    ⏭ Skip
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+        {currentItem && (
+          <div className="player-info">
+            <div className="now-playing-label">NOW PLAYING — AMPED</div>
+            <div className="now-playing-title">{currentItem.title}</div>
+            <div className="now-playing-channel">{currentItem.channelName}</div>
+          </div>
+        )}
       </div>
     );
   }

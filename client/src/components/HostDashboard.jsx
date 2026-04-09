@@ -43,13 +43,18 @@ const HostDashboard = () => {
   const { socket, isConnected } = useSocket();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { connectSocket, setPlaylist, setPlaybackState, clearLocal, items, currentItem } = usePlaylist();
+  const { connectSocket, setPlaylist, setPlaybackState, setPlaybackMode: setContextPlaybackMode, clearLocal, items, currentItem } = usePlaylist();
   const [playlistLoading, setPlaylistLoading] = useState(true);
   const isMobile = useIsMobile();
   const [showMobileWarning, setShowMobileWarning] = useState(true);
 
   const savedState = loadHostState(inviteCode);
   const [room, setRoom] = useState(null);
+  const [playbackMode, setPlaybackModeState] = useState('unplugged');
+  const setPlaybackMode = useCallback((mode) => {
+    setPlaybackModeState(mode);
+    setContextPlaybackMode(mode);
+  }, [setContextPlaybackMode]);
   const [results, setResults] = useState(savedState?.results || []);
   const [vibeSuggestions, setVibeSuggestions] = useState(savedState?.vibeSuggestions || []);
   const [loading, setLoading] = useState(false);
@@ -152,7 +157,10 @@ const HostDashboard = () => {
     });
 
     socket.on('room-updated', (data) => {
-      if (data.room) setRoom(data.room);
+      if (data.room) {
+        setRoom(data.room);
+        if (data.room.playbackMode) setPlaybackMode(data.room.playbackMode);
+      }
       if (data.playlist) {
         setPlaylist(data.playlist);
         setPlaylistLoading(false);
@@ -160,6 +168,10 @@ const HostDashboard = () => {
       if (data.members) {
         setMembers(data.members.map((m) => ({ ...m, active: true })));
       }
+    });
+
+    socket.on('mode-changed', ({ mode }) => {
+      setPlaybackMode(mode);
     });
 
     socket.on('user-joined', (member) => {
@@ -200,6 +212,7 @@ const HostDashboard = () => {
       socket.off('user-joined');
       socket.off('user-left');
       socket.off('playback-sync');
+      socket.off('mode-changed');
       socket.off('error');
     };
   }, [socket, setPlaylist]);
@@ -561,7 +574,7 @@ const HostDashboard = () => {
 
       <div className="app-body">
         <div className="panel-left">
-          <VideoPlayer isHost={true} playbackController={playbackController} popoutManager={popoutManager} />
+          <VideoPlayer isHost={true} playbackController={playbackController} popoutManager={popoutManager} playbackMode={playbackMode} socket={socket} roomId={room?.id} />
           <div className="search-section">
             <SearchBar
               onSearch={handleSearch}

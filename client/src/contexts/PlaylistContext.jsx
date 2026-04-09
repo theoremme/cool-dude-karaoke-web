@@ -157,6 +157,7 @@ export function PlaylistProvider({ children }) {
   const userNameRef = useRef(null);
   const [userName, setUserName] = useState(null);
   const isRemoteUpdate = useRef(false);
+  const playbackModeRef = useRef('unplugged');
 
   // Persist state to sessionStorage on every change
   useEffect(() => {
@@ -176,6 +177,11 @@ export function PlaylistProvider({ children }) {
     roomIdRef.current = roomId;
     userNameRef.current = name;
     setUserName(name);
+  }, []);
+
+  // Set playback mode — called by HostDashboard when mode-changed arrives
+  const setPlaybackMode = useCallback((mode) => {
+    playbackModeRef.current = mode;
   }, []);
 
   const emitSocket = useCallback((event, data) => {
@@ -247,18 +253,34 @@ export function PlaylistProvider({ children }) {
   }, []);
 
   const playIndex = useCallback((index) => {
+    if (playbackModeRef.current === 'amped' && socketRef.current && roomIdRef.current) {
+      socketRef.current.emit('playback-command', { roomId: roomIdRef.current, command: 'play-index', index });
+      return;
+    }
     dispatch({ type: 'PLAY_INDEX', payload: index });
   }, []);
 
   const playNext = useCallback(() => {
+    if (playbackModeRef.current === 'amped' && socketRef.current && roomIdRef.current) {
+      socketRef.current.emit('playback-command', { roomId: roomIdRef.current, command: 'skip' });
+      return;
+    }
     dispatch({ type: 'PLAY_NEXT' });
   }, []);
 
   const togglePlay = useCallback(() => {
+    if (playbackModeRef.current === 'amped' && socketRef.current && roomIdRef.current) {
+      socketRef.current.emit('playback-command', { roomId: roomIdRef.current, command: 'toggle' });
+      return;
+    }
     dispatch({ type: 'TOGGLE_PLAY' });
   }, []);
 
   const setPlaying = useCallback((val) => {
+    if (playbackModeRef.current === 'amped' && socketRef.current && roomIdRef.current) {
+      socketRef.current.emit('playback-command', { roomId: roomIdRef.current, command: val ? 'play' : 'pause' });
+      return;
+    }
     dispatch({ type: 'SET_PLAYING', payload: val });
   }, []);
 
@@ -272,11 +294,13 @@ export function PlaylistProvider({ children }) {
   }, []);
 
   // Broadcast playback state to other clients when it changes locally
+  // Skip when in amped mode — Electron owns playback-sync
   useEffect(() => {
     if (isRemoteUpdate.current) {
       isRemoteUpdate.current = false;
       return;
     }
+    if (playbackModeRef.current === 'amped') return;
     emitSocket('playback-sync', {
       currentIndex: state.currentIndex,
       isPlaying: state.isPlaying,
@@ -305,6 +329,7 @@ export function PlaylistProvider({ children }) {
     connectSocket,
     setPlaylist,
     setPlaybackState,
+    setPlaybackMode,
   };
 
   return (

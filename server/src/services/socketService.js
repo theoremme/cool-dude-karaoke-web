@@ -537,7 +537,7 @@ function setupSocketHandlers(io) {
     });
 
     // Web remote sends play/pause/skip command to Amped host
-    socket.on('playback-command', ({ roomId, command, videoId, currentTime }) => {
+    socket.on('playback-command', ({ roomId, command, videoId, currentTime, index }) => {
       const amped = ampedHosts.get(roomId);
       if (!amped) {
         socket.emit('error', { message: 'No Amped host connected to this room' });
@@ -549,6 +549,7 @@ function setupSocketHandlers(io) {
         command,
         videoId,
         currentTime,
+        index,
         fromUserId: socket.data.userId,
       });
       touchRoom(roomId, 'playback-command');
