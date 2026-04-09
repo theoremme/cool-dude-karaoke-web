@@ -13,6 +13,7 @@ const RoomLobby = () => {
   const [error, setError] = useState(null);
   const [activeRooms, setActiveRooms] = useState([]);
   const [roomsLoading, setRoomsLoading] = useState(true);
+  const [showMobileWarning, setShowMobileWarning] = useState(() => window.innerWidth <= 768);
 
   useEffect(() => {
     api.getMyRooms()
@@ -58,6 +59,18 @@ const RoomLobby = () => {
         <span className="amped-banner-text">Grab the Amped app for the full set.</span>
         <span className="amped-banner-cta">Download</span>
       </a>
+      {showMobileWarning && (
+        <div className="mobile-warning-overlay">
+          <div className="mobile-warning-card">
+            <img src={logo} alt="Cool Dude Karaoke" className="auth-logo" />
+            <h2>Yo, dude. This hits different on desktop.</h2>
+            <p>The host dashboard is designed for a big screen. You can still use it here, but it's way better on a laptop or desktop.</p>
+            <button className="btn-neon" onClick={() => setShowMobileWarning(false)}>
+              I'll rough it
+            </button>
+          </div>
+        </div>
+      )}
       <div className="room-lobby">
         <div className="lobby-card">
           <div className="logo-wrap">

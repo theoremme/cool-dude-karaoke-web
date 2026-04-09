@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 
-function QRCodeDisplay({ inviteCode, roomName, members = [], guestsExpanded, onToggleGuests, formatTime }) {
+function QRCodeDisplay({ inviteCode, roomName, members = [], guestsExpanded, onToggleGuests, formatTime, currentUserId }) {
   const qrRef = useRef(null);
   const joinUrl = `${window.location.origin}/room/${inviteCode}`;
   const activeCount = members.filter((m) => m.active).length;
@@ -47,7 +47,7 @@ function QRCodeDisplay({ inviteCode, roomName, members = [], guestsExpanded, onT
             <div className="guest-overlay-list">
               {members.map((m) => (
                 <div key={m.id} className={`guest-panel-item ${m.active ? '' : 'guest-panel-item-left'}`}>
-                  <span className="guest-panel-name">{m.guestName || 'Anonymous'}</span>
+                  <span className="guest-panel-name">{(currentUserId && m.userId === currentUserId) ? 'You' : (m.guestName || 'Guest')}</span>
                   <span className="guest-panel-time">
                     {m.active
                       ? `joined ${formatTime(m.joinedAt)}`

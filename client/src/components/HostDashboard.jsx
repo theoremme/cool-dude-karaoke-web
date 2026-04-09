@@ -429,7 +429,7 @@ const HostDashboard = () => {
     sessionStorage.setItem('karaoke-popup-banner-dismissed', '1');
   };
 
-  const popupBanner = showPopupBanner && (
+  const popupBanner = false && (
     <div style={{
       background: 'rgba(0,200,255,0.08)', border: '1px solid rgba(0,200,255,0.25)',
       borderRadius: 8, padding: '10px 14px', margin: '8px 0', display: 'flex',
@@ -453,7 +453,7 @@ const HostDashboard = () => {
     </div>
   );
 
-  const popupHelpModal = showPopupHelp && (
+  const popupHelpModal = false && (
     <div className="mobile-warning-overlay">
       <div className="auth-card" style={{ maxWidth: 400, textAlign: 'left' }}>
         <h2 style={{ fontFamily: 'Orbitron', fontSize: '1.1rem', marginBottom: 14 }}>Allow Popups</h2>
@@ -558,6 +558,7 @@ const HostDashboard = () => {
             guestsExpanded={guestsExpanded}
             onToggleGuests={() => setGuestsExpanded((v) => !v)}
             formatTime={formatTime}
+            currentUserId={user?.id}
           />
 
           {popupBanner}
@@ -667,6 +668,7 @@ const HostDashboard = () => {
             guestsExpanded={guestsExpanded}
             onToggleGuests={() => setGuestsExpanded((v) => !v)}
             formatTime={formatTime}
+            currentUserId={user?.id}
           />
           {popupBanner}
           <PlaylistQueue loading={playlistLoading} playbackMode={playbackMode} />
