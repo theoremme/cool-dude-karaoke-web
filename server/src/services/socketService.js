@@ -1,9 +1,15 @@
+const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
 
 // Track disconnected users for reconnection grace period
 // Map<memberId, { roomId, guestName, userId, timeoutId }>
 const disconnectedUsers = new Map();
 const RECONNECT_GRACE_MS = 30000; // 30 seconds to reconnect
+
+// Track Amped host sockets per room for disconnect detection
+// Map<roomId, { socketId, userId, timeoutId? }>
+const ampedHosts = new Map();
+const AMPED_FALLBACK_MS = 30000; // 30 seconds before fallback to unplugged
 
 // Auto-close inactive rooms to free WebSocket connections and save costs
 const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes
@@ -21,6 +27,17 @@ function setupSocketHandlers(io) {
     roomActivity.set(roomId, { lastActivity: Date.now(), warned: false });
     if (wasWarned) {
       io.to(roomId).emit('inactivity-cleared');
+    }
+  }
+
+  // Check if socket user is the host of the given room
+  async function isRoomHost(socket, roomId) {
+    if (!socket.data.isAuthenticated || !socket.data.userId) return false;
+    try {
+      const room = await prisma.room.findUnique({ where: { id: roomId }, select: { hostId: true } });
+      return room && room.hostId === socket.data.userId;
+    } catch {
+      return false;
     }
   }
 
@@ -57,6 +74,7 @@ function setupSocketHandlers(io) {
           });
 
           roomActivity.delete(roomId);
+          ampedHosts.delete(roomId);
           console.log(`[Auto-close] Room ${roomId} closed due to inactivity`);
         } catch (err) {
           console.error('[Auto-close] Error:', err);
@@ -71,8 +89,27 @@ function setupSocketHandlers(io) {
     }
   }, CHECK_INTERVAL);
 
+  // --- Socket authentication middleware ---
+  // Validates JWT if provided. Guests connect without a token.
+  io.use((socket, next) => {
+    const token = socket.handshake.auth?.token;
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        socket.data.userId = decoded.userId;
+        socket.data.isAuthenticated = true;
+      } catch (err) {
+        console.warn('[Socket Auth] Invalid token from', socket.id);
+        return next(new Error('Authentication failed: invalid token'));
+      }
+    } else {
+      socket.data.isAuthenticated = false;
+    }
+    next();
+  });
+
   io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
+    console.log('User connected:', socket.id, socket.data.isAuthenticated ? `(auth: ${socket.data.userId})` : '(guest)');
 
     // Join room (first time)
     socket.on('join-room', async ({ roomId, guestName, userId }) => {
@@ -86,13 +123,16 @@ function setupSocketHandlers(io) {
         socket.join(roomId);
         socket.data.roomId = roomId;
         socket.data.guestName = guestName;
-        socket.data.userId = userId;
+        // Use authenticated userId if available, fall back to provided userId
+        if (!socket.data.isAuthenticated) {
+          socket.data.userId = userId;
+        }
 
         // Add to room members
         const member = await prisma.roomMember.create({
           data: {
             roomId,
-            userId: userId || null,
+            userId: socket.data.userId || null,
             guestName: guestName || null,
           },
         });
@@ -102,7 +142,7 @@ function setupSocketHandlers(io) {
         socket.to(roomId).emit('user-joined', {
           id: member.id,
           guestName,
-          userId,
+          userId: socket.data.userId,
           joinedAt: member.joinedAt,
         });
 
@@ -148,7 +188,9 @@ function setupSocketHandlers(io) {
         socket.join(roomId);
         socket.data.roomId = roomId;
         socket.data.guestName = guestName;
-        socket.data.userId = userId;
+        if (!socket.data.isAuthenticated) {
+          socket.data.userId = userId;
+        }
 
         if (existingMember) {
           // Reuse existing member record, update last_seen
@@ -162,7 +204,7 @@ function setupSocketHandlers(io) {
           const member = await prisma.roomMember.create({
             data: {
               roomId,
-              userId: userId || null,
+              userId: socket.data.userId || null,
               guestName: guestName || null,
             },
           });
@@ -171,7 +213,7 @@ function setupSocketHandlers(io) {
           socket.to(roomId).emit('user-joined', {
             id: member.id,
             guestName,
-            userId,
+            userId: socket.data.userId,
             joinedAt: member.joinedAt,
           });
         }
@@ -188,6 +230,18 @@ function setupSocketHandlers(io) {
 
         socket.emit('room-updated', { room, playlist, members });
         socket.emit('rejoined', { memberId: socket.data.memberId });
+
+        // If this is the Amped host reconnecting, cancel fallback and restore
+        const ampedEntry = ampedHosts.get(roomId);
+        if (ampedEntry && ampedEntry.userId === socket.data.userId) {
+          if (ampedEntry.timeoutId) {
+            clearTimeout(ampedEntry.timeoutId);
+          }
+          ampedHosts.set(roomId, { socketId: socket.id, userId: socket.data.userId });
+          io.to(roomId).emit('amped-reconnected', {});
+          console.log(`[Amped] Host reconnected to room ${roomId}, fallback cancelled`);
+        }
+
         touchRoom(roomId, 'rejoin-room');
       } catch (err) {
         console.error('rejoin-room error:', err);
@@ -260,9 +314,14 @@ function setupSocketHandlers(io) {
       }
     });
 
-    // Remove song
+    // Remove song (host only)
     socket.on('remove-song', async ({ roomId, itemId }) => {
       try {
+        if (socket.data.isAuthenticated && !(await isRoomHost(socket, roomId))) {
+          socket.emit('error', { message: 'Only the host can remove songs' });
+          return;
+        }
+
         await prisma.playlistItem.delete({ where: { id: itemId } });
 
         // Re-order remaining items
@@ -293,9 +352,14 @@ function setupSocketHandlers(io) {
       }
     });
 
-    // Reorder song
+    // Reorder song (host only)
     socket.on('reorder-song', async ({ roomId, itemId, newPosition }) => {
       try {
+        if (socket.data.isAuthenticated && !(await isRoomHost(socket, roomId))) {
+          socket.emit('error', { message: 'Only the host can reorder songs' });
+          return;
+        }
+
         const item = await prisma.playlistItem.findFirst({
           where: { id: itemId, roomId },
         });
@@ -332,9 +396,14 @@ function setupSocketHandlers(io) {
       }
     });
 
-    // Clear playlist
+    // Clear playlist (host only)
     socket.on('clear-playlist', async ({ roomId }) => {
       try {
+        if (!(await isRoomHost(socket, roomId))) {
+          socket.emit('error', { message: 'Only the host can clear the playlist' });
+          return;
+        }
+
         await prisma.playlistItem.deleteMany({ where: { roomId } });
         io.to(roomId).emit('playlist-updated', []);
       } catch (err) {
@@ -343,10 +412,17 @@ function setupSocketHandlers(io) {
       }
     });
 
-    // Close room (host ends the session)
+    // Close room (host only)
     socket.on('close-room', async ({ roomId }) => {
-      roomActivity.delete(roomId);
       try {
+        if (!(await isRoomHost(socket, roomId))) {
+          socket.emit('error', { message: 'Only the host can close the room' });
+          return;
+        }
+
+        roomActivity.delete(roomId);
+        ampedHosts.delete(roomId);
+
         // Get the final playlist before closing
         const playlist = await prisma.playlistItem.findMany({
           where: { roomId },
@@ -384,14 +460,165 @@ function setupSocketHandlers(io) {
       if (roomId) touchRoom(roomId, 'activity-ping');
     });
 
-    // Disconnect — grace period before cleanup
+    // =============================================
+    // Amped mode events
+    // =============================================
+
+    // Electron host signals Amped mode (host only)
+    socket.on('amped-connect', async ({ roomId }) => {
+      try {
+        if (!(await isRoomHost(socket, roomId))) {
+          socket.emit('error', { message: 'Only the host can activate Amped mode' });
+          return;
+        }
+
+        // Cancel any pending Amped fallback timer
+        const existing = ampedHosts.get(roomId);
+        if (existing?.timeoutId) {
+          clearTimeout(existing.timeoutId);
+        }
+
+        // Track this socket as the Amped host
+        ampedHosts.set(roomId, { socketId: socket.id, userId: socket.data.userId });
+
+        // Update room in database
+        await prisma.room.update({
+          where: { id: roomId },
+          data: { playbackMode: 'amped' },
+        });
+
+        // Broadcast mode change to all clients in the room
+        io.to(roomId).emit('mode-changed', {
+          mode: 'amped',
+          triggeredBy: socket.data.userId,
+        });
+
+        touchRoom(roomId, 'amped-connect');
+        console.log(`[Amped] Room ${roomId} switched to Amped mode by ${socket.data.userId}`);
+      } catch (err) {
+        console.error('amped-connect error:', err);
+        socket.emit('error', { message: 'Failed to activate Amped mode' });
+      }
+    });
+
+    // Electron host explicitly leaves Amped mode (host only)
+    socket.on('amped-disconnect', async ({ roomId }) => {
+      try {
+        if (!(await isRoomHost(socket, roomId))) {
+          socket.emit('error', { message: 'Only the host can deactivate Amped mode' });
+          return;
+        }
+
+        // Clear Amped tracking
+        const existing = ampedHosts.get(roomId);
+        if (existing?.timeoutId) {
+          clearTimeout(existing.timeoutId);
+        }
+        ampedHosts.delete(roomId);
+
+        // Update room in database
+        await prisma.room.update({
+          where: { id: roomId },
+          data: { playbackMode: 'unplugged' },
+        });
+
+        // Broadcast mode change
+        io.to(roomId).emit('mode-changed', {
+          mode: 'unplugged',
+          triggeredBy: socket.data.userId,
+        });
+
+        touchRoom(roomId, 'amped-disconnect');
+        console.log(`[Amped] Room ${roomId} switched to Unplugged mode by ${socket.data.userId}`);
+      } catch (err) {
+        console.error('amped-disconnect error:', err);
+        socket.emit('error', { message: 'Failed to deactivate Amped mode' });
+      }
+    });
+
+    // Web remote sends play/pause/skip command to Amped host
+    socket.on('playback-command', ({ roomId, command, videoId, currentTime }) => {
+      const amped = ampedHosts.get(roomId);
+      if (!amped) {
+        socket.emit('error', { message: 'No Amped host connected to this room' });
+        return;
+      }
+
+      // Forward the command to the Amped host socket
+      io.to(amped.socketId).emit('playback-command', {
+        command,
+        videoId,
+        currentTime,
+        fromUserId: socket.data.userId,
+      });
+      touchRoom(roomId, 'playback-command');
+    });
+
+    // Web player hands off playback to incoming Amped client
+    socket.on('amped-handoff', ({ roomId, videoId, currentTime }) => {
+      const amped = ampedHosts.get(roomId);
+      if (!amped) {
+        socket.emit('error', { message: 'No Amped host connected to this room' });
+        return;
+      }
+
+      // Forward handoff data to the Amped host socket
+      io.to(amped.socketId).emit('amped-handoff', {
+        videoId,
+        currentTime,
+        fromUserId: socket.data.userId,
+      });
+      touchRoom(roomId, 'amped-handoff');
+    });
+
+    // =============================================
+    // Disconnect handling (with Amped awareness)
+    // =============================================
+
     socket.on('disconnect', async () => {
       console.log('User disconnected:', socket.id);
 
       const { roomId, memberId, guestName, userId } = socket.data;
 
+      // Check if this was the Amped host
+      if (roomId) {
+        const amped = ampedHosts.get(roomId);
+        if (amped && amped.socketId === socket.id) {
+          console.log(`[Amped] Amped host disconnected from room ${roomId}, starting ${AMPED_FALLBACK_MS / 1000}s countdown`);
+
+          // Notify all clients that Amped host disconnected
+          io.to(roomId).emit('amped-disconnected', {
+            secondsUntilFallback: AMPED_FALLBACK_MS / 1000,
+          });
+
+          // Start fallback timer
+          const timeoutId = setTimeout(async () => {
+            // Amped host didn't reconnect — fall back to unplugged
+            ampedHosts.delete(roomId);
+            try {
+              await prisma.room.update({
+                where: { id: roomId },
+                data: { playbackMode: 'unplugged' },
+              });
+
+              io.to(roomId).emit('mode-changed', {
+                mode: 'unplugged',
+                triggeredBy: 'timeout',
+              });
+
+              console.log(`[Amped] Room ${roomId} fell back to Unplugged after timeout`);
+            } catch (err) {
+              console.error('[Amped] Fallback error:', err);
+            }
+          }, AMPED_FALLBACK_MS);
+
+          // Keep the amped entry but add the timeout so reconnect can cancel it
+          ampedHosts.set(roomId, { ...amped, timeoutId });
+        }
+      }
+
+      // Standard disconnect grace period for member cleanup
       if (roomId && memberId) {
-        // Give the user time to reconnect before removing them
         const timeoutId = setTimeout(async () => {
           disconnectedUsers.delete(memberId);
           try {
