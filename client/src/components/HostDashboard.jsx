@@ -620,8 +620,8 @@ const HostDashboard = () => {
 
       {playbackMode !== 'amped' && (
         <a href="https://github.com/theoremme/cool-dude-karaoke/releases/latest" target="_blank" rel="noopener noreferrer" className="amped-banner">
-          <span className="amped-banner-icon">⚡</span>
-          <span className="amped-banner-text"><strong>Dude, Where's My Song?</strong> Grab the Amped app for the full set.</span>
+          <span className="amped-banner-title">⚡ Dude, Where's My Song?</span>
+          <span className="amped-banner-text">Grab the Amped app for the full set.</span>
           <span className="amped-banner-cta">Download</span>
         </a>
       )}

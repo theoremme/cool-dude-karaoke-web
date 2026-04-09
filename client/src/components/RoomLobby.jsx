@@ -53,6 +53,11 @@ const RoomLobby = () => {
 
   return (
     <div className="app app-page">
+      <a href="https://github.com/theoremme/cool-dude-karaoke/releases/latest" target="_blank" rel="noopener noreferrer" className="amped-banner amped-banner-top">
+        <span className="amped-banner-title">⚡ Dude, Where's My Song?</span>
+        <span className="amped-banner-text">Grab the Amped app for the full set.</span>
+        <span className="amped-banner-cta">Download</span>
+      </a>
       <div className="room-lobby">
         <div className="lobby-card">
           <div className="logo-wrap">
@@ -146,13 +151,8 @@ const RoomLobby = () => {
               </button>
             </form>
           </div>
-
-          <a href="https://github.com/theoremme/cool-dude-karaoke/releases/latest" target="_blank" rel="noopener noreferrer" className="amped-banner amped-banner-card">
-            <span className="amped-banner-icon">⚡</span>
-            <span className="amped-banner-text"><strong>Dude, Where's My Song?</strong> Grab the Amped app for the full set.</span>
-            <span className="amped-banner-cta">Download</span>
-          </a>
         </div>
+
       </div>
     </div>
   );
