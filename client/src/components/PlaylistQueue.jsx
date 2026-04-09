@@ -12,7 +12,7 @@ function useIsMobile(breakpoint = 768) {
   return isMobile;
 }
 
-const PlaylistQueue = ({ guestMode = false, loading = false }) => {
+const PlaylistQueue = ({ guestMode = false, loading = false, playbackMode }) => {
   const {
     items,
     currentIndex,
@@ -27,6 +27,15 @@ const PlaylistQueue = ({ guestMode = false, loading = false }) => {
   } = usePlaylist();
 
   const isMobile = useIsMobile();
+  const activeItemRef = useRef(null);
+
+  // Auto-scroll to current song when it changes
+  useEffect(() => {
+    if (activeItemRef.current) {
+      activeItemRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }, [currentIndex]);
+
   const [dragIndex, setDragIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
   const dragCounter = useRef(0);
@@ -118,8 +127,9 @@ const PlaylistQueue = ({ guestMode = false, loading = false }) => {
           {items.map((item, index) => (
             <div
               key={item.id}
-              className={`queue-item ${index === currentIndex ? 'queue-item-active' : ''} ${dragOverIndex === index ? 'queue-item-dragover' : ''}`}
-              onDoubleClick={!guestMode ? () => playIndex(index) : undefined}
+              ref={index === currentIndex ? activeItemRef : null}
+              className={`queue-item ${index === currentIndex ? 'queue-item-active' : ''} ${dragOverIndex === index ? 'queue-item-dragover' : ''} ${playbackMode === 'unplugged' && !item.embeddable ? 'queue-item-disabled' : ''}`}
+              onDoubleClick={!guestMode && !(playbackMode === 'unplugged' && !item.embeddable) ? () => playIndex(index) : undefined}
               draggable={!guestMode && !isMobile}
               onDragStart={!guestMode && !isMobile ? (e) => handleDragStart(e, index) : undefined}
               onDragEnd={!guestMode && !isMobile ? handleDragEnd : undefined}
@@ -163,6 +173,9 @@ const PlaylistQueue = ({ guestMode = false, loading = false }) => {
                     </span>
                   )}
                 </p>
+                {playbackMode === 'unplugged' && !item.embeddable && (
+                  <span className="queue-amped-badge">Amped Only</span>
+                )}
               </div>
               {!guestMode && (
                 <button

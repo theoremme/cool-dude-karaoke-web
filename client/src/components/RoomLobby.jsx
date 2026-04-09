@@ -18,6 +18,15 @@ const RoomLobby = () => {
     api.getMyRooms()
       .then((data) => setActiveRooms(data.rooms || []))
       .finally(() => setRoomsLoading(false));
+
+    // Auto-refresh room list every 10 seconds
+    const interval = setInterval(() => {
+      api.getMyRooms()
+        .then((data) => setActiveRooms(data.rooms || []))
+        .catch(() => {});
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleCreate = async (e) => {
@@ -46,7 +55,10 @@ const RoomLobby = () => {
     <div className="app app-page">
       <div className="room-lobby">
         <div className="lobby-card">
-          <img src={logo} alt="Cool Dude Karaoke" className="auth-logo" />
+          <div className="logo-wrap">
+            <img src={logo} alt="Cool Dude Karaoke" className="auth-logo" />
+            <span className="logo-subtitle logo-unplugged">UNPLUGGED</span>
+          </div>
           <div style={{ textAlign: 'center', marginBottom: 16 }}>
             <span style={{ color: '#888', fontSize: 13 }}>
               Welcome, {user?.name || user?.email}

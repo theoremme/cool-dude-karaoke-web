@@ -9,7 +9,7 @@ function formatCountdown(seconds) {
   return `${m}:${String(s).padStart(2, '0')}`;
 }
 
-const VideoPlayer = ({ isHost = false, playbackController, popoutManager, playbackMode, socket, roomId }) => {
+const VideoPlayer = ({ isHost = false, playbackController, popoutManager, playbackMode, socket, roomId, ampedDisconnected, onSwitchToWeb }) => {
   const { currentItem, isPlaying, playNext, setPlaying } = usePlaylist();
   const ytRef = useRef(null);
   const [loading, setLoading] = useState(false);
@@ -23,6 +23,11 @@ const VideoPlayer = ({ isHost = false, playbackController, popoutManager, playba
   // Trigger playSong when currentItem changes (skip in amped mode — Electron handles it)
   useEffect(() => {
     if (!currentItem || !playSong || playbackMode === 'amped') return;
+    // If current song isn't embeddable in unplugged mode, skip it
+    if (playbackMode === 'unplugged' && !currentItem.embeddable) {
+      playNext();
+      return;
+    }
     playSong(currentItem);
   }, [currentItem?.videoId, playbackMode]);
 
@@ -82,6 +87,49 @@ const VideoPlayer = ({ isHost = false, playbackController, popoutManager, playba
             <p>Add songs and hit play to start the party!</p>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Amped disconnected — desktop app dropped, countdown to fallback
+  if (playbackMode === 'amped' && ampedDisconnected) {
+    return (
+      <div className="video-player">
+        <div className="player-popout-placeholder" style={{
+          background: 'radial-gradient(ellipse at center, rgba(255,68,102,0.1) 0%, rgba(0,0,0,0.95) 70%)',
+        }}>
+          <div className="popout-placeholder-content" style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 36, marginBottom: 8, color: '#ff4466' }}>⚡</div>
+            <div style={{
+              color: '#ff4466', fontSize: 16, fontWeight: 700, textTransform: 'uppercase',
+              letterSpacing: 2, marginBottom: 8,
+            }}>
+              Amped Disconnected
+            </div>
+            <div style={{ color: '#888', fontSize: 13, marginBottom: 16 }}>
+              Waiting for reconnection...
+            </div>
+            {ampedDisconnected.secondsLeft > 0 && (
+              <div style={{
+                fontSize: '2.5rem', fontWeight: 900, color: '#ff4466',
+                textShadow: '0 0 20px rgba(255,68,102,0.5)',
+                marginBottom: 16,
+              }}>
+                {ampedDisconnected.secondsLeft}s
+              </div>
+            )}
+            <button className="btn-neon btn-small" onClick={onSwitchToWeb} style={{ borderColor: '#ff4466', color: '#ff4466' }}>
+              Switch to Web Player Now
+            </button>
+          </div>
+        </div>
+        {currentItem && (
+          <div className="player-info">
+            <div className="now-playing-label" style={{ color: '#ff4466' }}>PLAYBACK PAUSED</div>
+            <div className="now-playing-title">{currentItem.title}</div>
+            <div className="now-playing-channel">{currentItem.channelName}</div>
+          </div>
+        )}
       </div>
     );
   }
@@ -235,6 +283,22 @@ const VideoPlayer = ({ isHost = false, playbackController, popoutManager, playba
           <div className="now-playing-label">NOW PLAYING</div>
           <div className="now-playing-title">{currentItem.title}</div>
           <div className="now-playing-channel">{currentItem.channelName}</div>
+        </div>
+      </div>
+    );
+  }
+
+  // In unplugged mode, if current song is non-embeddable, skip it
+  if (playbackMode === 'unplugged' && currentItem && !currentItem.embeddable) {
+    // Trigger skip on next tick to avoid render-during-render
+    setTimeout(() => playNext(), 0);
+    return (
+      <div className="video-player">
+        <div className="player-placeholder">
+          <div className="placeholder-content">
+            <div className="placeholder-icon">♪</div>
+            <p>Skipping non-embeddable song...</p>
+          </div>
         </div>
       </div>
     );

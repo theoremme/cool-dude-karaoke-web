@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const prisma = require('../lib/prisma');
+const { checkEmbeddable } = require('./youtubeService');
 
 // Track disconnected users for reconnection grace period
 // Map<memberId, { roomId, guestName, userId, timeoutId }>
@@ -27,6 +28,42 @@ function setupSocketHandlers(io) {
     roomActivity.set(roomId, { lastActivity: Date.now(), warned: false });
     if (wasWarned) {
       io.to(roomId).emit('inactivity-cleared');
+    }
+  }
+
+  // Check and update embeddable status for all songs in a room, then broadcast
+  async function refreshEmbeddableStatus(roomId) {
+    try {
+      const items = await prisma.playlistItem.findMany({
+        where: { roomId },
+        orderBy: { position: 'asc' },
+      });
+
+      if (!items.length) return;
+
+      const videoIds = items.map((item) => item.videoId);
+      const embeddableMap = await checkEmbeddable(videoIds);
+
+      // Update any items whose status changed
+      for (const item of items) {
+        const isEmbeddable = embeddableMap[item.videoId] ?? item.embeddable;
+        if (isEmbeddable !== item.embeddable) {
+          await prisma.playlistItem.update({
+            where: { id: item.id },
+            data: { embeddable: isEmbeddable },
+          });
+        }
+      }
+
+      // Broadcast updated playlist
+      const updatedPlaylist = await prisma.playlistItem.findMany({
+        where: { roomId },
+        orderBy: { position: 'asc' },
+      });
+      io.to(roomId).emit('playlist-updated', updatedPlaylist);
+      console.log(`[Embeddable] Refreshed status for ${videoIds.length} songs in room ${roomId}`);
+    } catch (err) {
+      console.error('[Embeddable] Refresh error:', err.message);
     }
   }
 
@@ -128,23 +165,36 @@ function setupSocketHandlers(io) {
           socket.data.userId = userId;
         }
 
-        // Add to room members
-        const member = await prisma.roomMember.create({
-          data: {
-            roomId,
-            userId: socket.data.userId || null,
-            guestName: guestName || null,
-          },
-        });
+        // Reuse existing member record for the same userId, or create new
+        let member;
+        if (socket.data.userId) {
+          member = await prisma.roomMember.findFirst({
+            where: { roomId, userId: socket.data.userId },
+          });
+          if (member) {
+            await prisma.roomMember.update({
+              where: { id: member.id },
+              data: { lastSeen: new Date() },
+            });
+          }
+        }
+        if (!member) {
+          member = await prisma.roomMember.create({
+            data: {
+              roomId,
+              userId: socket.data.userId || null,
+              guestName: guestName || null,
+            },
+          });
+          // Only notify others for genuinely new members
+          socket.to(roomId).emit('user-joined', {
+            id: member.id,
+            guestName,
+            userId: socket.data.userId,
+            joinedAt: member.joinedAt,
+          });
+        }
         socket.data.memberId = member.id;
-
-        // Notify others in the room
-        socket.to(roomId).emit('user-joined', {
-          id: member.id,
-          guestName,
-          userId: socket.data.userId,
-          joinedAt: member.joinedAt,
-        });
 
         // Send current room state to the joining user
         const playlist = await prisma.playlistItem.findMany({
@@ -156,7 +206,8 @@ function setupSocketHandlers(io) {
           select: { id: true, guestName: true, userId: true, joinedAt: true },
         });
 
-        socket.emit('room-updated', { room, playlist, members });
+        const playback = (room.settings && typeof room.settings === 'object') ? room.settings.playback : null;
+        socket.emit('room-updated', { room, playlist, members, playback });
         touchRoom(roomId, 'join-room');
       } catch (err) {
         console.error('join-room error:', err);
@@ -228,7 +279,8 @@ function setupSocketHandlers(io) {
           select: { id: true, guestName: true, userId: true, joinedAt: true },
         });
 
-        socket.emit('room-updated', { room, playlist, members });
+        const playback = (room.settings && typeof room.settings === 'object') ? room.settings.playback : null;
+        socket.emit('room-updated', { room, playlist, members, playback });
         socket.emit('rejoined', { memberId: socket.data.memberId });
 
         // If this is the Amped host reconnecting, cancel fallback and restore
@@ -450,9 +502,18 @@ function setupSocketHandlers(io) {
     });
 
     // Playback sync — host broadcasts current playback state to all guests
-    socket.on('playback-sync', ({ roomId, currentIndex, isPlaying, mode }) => {
+    // Also persist to room settings so new/refreshed clients can restore state
+    socket.on('playback-sync', async ({ roomId, currentIndex, isPlaying, mode }) => {
       socket.to(roomId).emit('playback-sync', { currentIndex, isPlaying, mode });
       touchRoom(roomId, 'playback-sync');
+      try {
+        const room = await prisma.room.findUnique({ where: { id: roomId }, select: { settings: true } });
+        const settings = (room?.settings && typeof room.settings === 'object') ? room.settings : {};
+        settings.playback = { currentIndex, isPlaying, mode };
+        await prisma.room.update({ where: { id: roomId }, data: { settings } });
+      } catch (err) {
+        // Non-critical — don't break playback sync for a DB write failure
+      }
     });
 
     // Host confirms they're still active (from inactivity warning modal)
@@ -527,6 +588,9 @@ function setupSocketHandlers(io) {
           mode: 'unplugged',
           triggeredBy: socket.data.userId,
         });
+
+        // Check embeddable status so web client can dim non-embeddable songs
+        refreshEmbeddableStatus(roomId);
 
         touchRoom(roomId, 'amped-disconnect');
         console.log(`[Amped] Room ${roomId} switched to Unplugged mode by ${socket.data.userId}`);
@@ -607,6 +671,7 @@ function setupSocketHandlers(io) {
                 triggeredBy: 'timeout',
               });
 
+              refreshEmbeddableStatus(roomId);
               console.log(`[Amped] Room ${roomId} fell back to Unplugged after timeout`);
             } catch (err) {
               console.error('[Amped] Fallback error:', err);

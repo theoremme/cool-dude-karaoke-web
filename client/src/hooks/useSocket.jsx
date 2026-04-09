@@ -6,8 +6,10 @@ export function useSocket() {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
+    const token = localStorage.getItem('token');
     const socket = io({
       transports: ['websocket', 'polling'],
+      auth: token ? { token } : undefined,
     });
 
     socket.on('connect', () => setIsConnected(true));

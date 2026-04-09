@@ -265,8 +265,21 @@ export function PlaylistProvider({ children }) {
       socketRef.current.emit('playback-command', { roomId: roomIdRef.current, command: 'skip' });
       return;
     }
+    // In unplugged mode, skip non-embeddable songs
+    if (playbackModeRef.current === 'unplugged') {
+      let next = state.currentIndex + 1;
+      while (next < state.items.length && state.items[next].embeddable === false) {
+        next++;
+      }
+      if (next < state.items.length) {
+        dispatch({ type: 'PLAY_INDEX', payload: next });
+        return;
+      }
+      dispatch({ type: 'SET_PLAYING', payload: false });
+      return;
+    }
     dispatch({ type: 'PLAY_NEXT' });
-  }, []);
+  }, [state.items, state.currentIndex]);
 
   const togglePlay = useCallback(() => {
     if (playbackModeRef.current === 'amped' && socketRef.current && roomIdRef.current) {

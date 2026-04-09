@@ -55,7 +55,9 @@ const HostDashboard = () => {
     setPlaybackModeState(mode);
     setContextPlaybackMode(mode);
   }, [setContextPlaybackMode]);
-  const [results, setResults] = useState(savedState?.results || []);
+  const [ampedDisconnected, setAmpedDisconnected] = useState(null); // { secondsLeft } or null
+  const ampedCountdownRef = useRef(null);
+  const [results, setResults] = useState(savedState?.results || [])
   const [vibeSuggestions, setVibeSuggestions] = useState(savedState?.vibeSuggestions || []);
   const [loading, setLoading] = useState(false);
   const [vibeLoading, setVibeLoading] = useState(false);
@@ -168,10 +170,48 @@ const HostDashboard = () => {
       if (data.members) {
         setMembers(data.members.map((m) => ({ ...m, active: true })));
       }
+      // Restore last known playback state (e.g. after page refresh)
+      if (data.playback) {
+        setPlaybackState(data.playback.currentIndex, data.playback.isPlaying);
+      }
     });
 
     socket.on('mode-changed', ({ mode }) => {
+      const wasAmped = playbackMode === 'amped';
       setPlaybackMode(mode);
+      // Clear disconnect state when mode resolves
+      setAmpedDisconnected(null);
+      if (ampedCountdownRef.current) {
+        clearInterval(ampedCountdownRef.current);
+        ampedCountdownRef.current = null;
+      }
+      // When switching from amped to unplugged, pause so UI is accurate
+      // (web player hasn't actually started the video yet)
+      if (wasAmped && mode === 'unplugged') {
+        setPlaybackState(items.indexOf(currentItem), false);
+      }
+    });
+
+    socket.on('amped-disconnected', ({ secondsUntilFallback }) => {
+      setAmpedDisconnected({ secondsLeft: secondsUntilFallback });
+      if (ampedCountdownRef.current) clearInterval(ampedCountdownRef.current);
+      let seconds = secondsUntilFallback;
+      ampedCountdownRef.current = setInterval(() => {
+        seconds--;
+        setAmpedDisconnected({ secondsLeft: Math.max(0, seconds) });
+        if (seconds <= 0) {
+          clearInterval(ampedCountdownRef.current);
+          ampedCountdownRef.current = null;
+        }
+      }, 1000);
+    });
+
+    socket.on('amped-reconnected', () => {
+      setAmpedDisconnected(null);
+      if (ampedCountdownRef.current) {
+        clearInterval(ampedCountdownRef.current);
+        ampedCountdownRef.current = null;
+      }
     });
 
     socket.on('user-joined', (member) => {
@@ -213,7 +253,10 @@ const HostDashboard = () => {
       socket.off('user-left');
       socket.off('playback-sync');
       socket.off('mode-changed');
+      socket.off('amped-disconnected');
+      socket.off('amped-reconnected');
       socket.off('error');
+      if (ampedCountdownRef.current) clearInterval(ampedCountdownRef.current);
     };
   }, [socket, setPlaylist]);
 
@@ -506,7 +549,7 @@ const HostDashboard = () => {
             </div>
           )}
 
-          <PlaylistQueue loading={playlistLoading} />
+          <PlaylistQueue loading={playlistLoading} playbackMode={playbackMode} />
 
           <QRCodeDisplay
             inviteCode={inviteCode}
@@ -566,7 +609,10 @@ const HostDashboard = () => {
       )}
       <header className="app-header">
         <button className="btn-lobby" onClick={() => navigate('/')}>Lobby</button>
-        <img src={logo} alt="Cool Dude Karaoke" className="app-logo host-logo" style={{ height: 240 }} />
+        <div className="logo-wrap">
+          <img src={logo} alt="Cool Dude Karaoke" className="app-logo host-logo" style={{ height: 240 }} />
+          <span className="logo-subtitle logo-unplugged">UNPLUGGED</span>
+        </div>
         <button className="btn-leave-room" onClick={() => setShowLeaveModal(true)}>
           Bail
         </button>
@@ -574,7 +620,11 @@ const HostDashboard = () => {
 
       <div className="app-body">
         <div className="panel-left">
-          <VideoPlayer isHost={true} playbackController={playbackController} popoutManager={popoutManager} playbackMode={playbackMode} socket={socket} roomId={room?.id} />
+          <VideoPlayer isHost={true} playbackController={playbackController} popoutManager={popoutManager} playbackMode={playbackMode} socket={socket} roomId={room?.id} ampedDisconnected={ampedDisconnected} onSwitchToWeb={() => {
+            if (socket && room) {
+              socket.emit('amped-disconnect', { roomId: room.id });
+            }
+          }} />
           <div className="search-section">
             <SearchBar
               onSearch={handleSearch}
@@ -611,7 +661,7 @@ const HostDashboard = () => {
             formatTime={formatTime}
           />
           {popupBanner}
-          <PlaylistQueue loading={playlistLoading} />
+          <PlaylistQueue loading={playlistLoading} playbackMode={playbackMode} />
           <PlaylistSync socket={socket} roomId={room?.id} />
         </div>
       </div>

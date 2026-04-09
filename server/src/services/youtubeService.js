@@ -221,4 +221,39 @@ async function searchVideos(query, maxResults = 10) {
   return results;
 }
 
-module.exports = { searchVideos, getQuotaStatus, setDailyLimit };
+// Batch-check embeddable status for a list of video IDs
+// Returns a map: { videoId: boolean }
+async function checkEmbeddable(videoIds) {
+  if (!videoIds.length) return {};
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) return {};
+
+  resetQuotaIfNewDay();
+  const results = {};
+
+  // YouTube API allows up to 50 IDs per request
+  for (let i = 0; i < videoIds.length; i += 50) {
+    const batch = videoIds.slice(i, i + 50);
+    const params = new URLSearchParams({
+      part: 'status',
+      id: batch.join(','),
+      key: apiKey,
+    });
+
+    try {
+      const data = await fetchJSON(`${YOUTUBE_API_BASE}/videos?${params}`);
+      trackQuota('videoDetails', 1);
+      if (data.items) {
+        for (const item of data.items) {
+          results[item.id] = item.status?.embeddable ?? false;
+        }
+      }
+    } catch (err) {
+      console.error('[YouTube] checkEmbeddable error:', err.message);
+    }
+  }
+
+  return results;
+}
+
+module.exports = { searchVideos, getQuotaStatus, setDailyLimit, checkEmbeddable };

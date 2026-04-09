@@ -33,7 +33,10 @@ const AuthPage = () => {
     <div className="app app-page">
       <div className="auth-page">
         <div className="auth-card">
-          <img src={logo} alt="Cool Dude Karaoke" className="auth-logo" />
+          <div className="logo-wrap">
+            <img src={logo} alt="Cool Dude Karaoke" className="auth-logo" />
+            <span className="logo-subtitle logo-unplugged">UNPLUGGED</span>
+          </div>
           <h2>{isLogin ? 'Welcome Back' : 'Create Account'}</h2>
 
           {error && <div className="error-message">{error}</div>}
