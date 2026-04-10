@@ -522,14 +522,17 @@ const HostDashboard = () => {
         )}
         <div className="guest-view">
           <div className="guest-header">
-            <img src={logo} alt="Cool Dude Karaoke" style={{ height: 180, marginBottom: 8 }} />
-            <h2>{room?.name}</h2>
-            <div style={{ display: 'flex', gap: 10, marginTop: 8, width: '100%', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', gap: 10, width: '100%', justifyContent: 'space-between', marginBottom: 8 }}>
               <button className="btn-lobby" style={{ position: 'static' }} onClick={() => navigate('/')}>Lobby</button>
               <button className="btn-leave-room" style={{ position: 'static' }} onClick={() => setShowLeaveModal(true)}>
                 Bail
               </button>
             </div>
+            <div className="logo-wrap">
+              <img src={logo} alt="Cool Dude Karaoke" className="app-logo host-logo" style={{ height: 180, marginBottom: 0 }} />
+              <span className="logo-subtitle logo-unplugged">UNPLUGGED</span>
+            </div>
+            <div className="mobile-header-line"></div>
           </div>
 
           {currentItem ? (

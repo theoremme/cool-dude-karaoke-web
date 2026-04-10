@@ -10,7 +10,7 @@ const searchYouTube = async (query) => {
 };
 
 const SongVersions = ({ song, onBack }) => {
-  const { addItem, items } = usePlaylist();
+  const { addItem, items, playbackMode } = usePlaylist();
   const [versions, setVersions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -47,7 +47,7 @@ const SongVersions = ({ song, onBack }) => {
       {error && <div className="error-message">{error}</div>}
 
       <div className="vibe-versions-list">
-        {versions.map((video) => {
+        {versions.filter(v => playbackMode === 'amped' || v.embeddable !== false).map((video) => {
           const added = isInPlaylist(video.videoId);
           return (
             <div key={video.videoId} className="vibe-version-item">

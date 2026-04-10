@@ -158,6 +158,7 @@ export function PlaylistProvider({ children }) {
   const [userName, setUserName] = useState(null);
   const isRemoteUpdate = useRef(false);
   const playbackModeRef = useRef('unplugged');
+  const [playbackMode, _setPlaybackMode] = useState('unplugged');
 
   // Persist state to sessionStorage on every change
   useEffect(() => {
@@ -182,6 +183,7 @@ export function PlaylistProvider({ children }) {
   // Set playback mode — called by HostDashboard when mode-changed arrives
   const setPlaybackMode = useCallback((mode) => {
     playbackModeRef.current = mode;
+    _setPlaybackMode(mode);
   }, []);
 
   const emitSocket = useCallback((event, data) => {
@@ -343,6 +345,7 @@ export function PlaylistProvider({ children }) {
     setPlaylist,
     setPlaybackState,
     setPlaybackMode,
+    playbackMode,
   };
 
   return (

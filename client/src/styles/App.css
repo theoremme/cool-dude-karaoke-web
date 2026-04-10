@@ -1619,13 +1619,21 @@ body {
   font-weight: 900;
   font-size: 20px;
   letter-spacing: 10px;
-  transform: rotate(-7deg);
+  transform: rotate(-6deg);
   margin-top: -52px;
   text-align: right;
   padding-right: 8%;
   margin-bottom: 16px;
   position: relative;
   z-index: 1;
+}
+
+/* Scale subtitle proportionally when next to larger host-logo */
+.app-logo.host-logo ~ .logo-subtitle {
+  font-size: 27px;
+  padding: 11px 28px;
+  letter-spacing: 12px;
+  margin-top: -62px;
 }
 
 .logo-unplugged {
@@ -1927,6 +1935,13 @@ body {
   margin-top: 4px;
 }
 
+.mobile-header-line {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #00c8ff, #9d00ff, #ff00ff, #9d00ff, #00c8ff, transparent);
+  box-shadow: 0 0 15px rgba(0, 200, 255, 0.5), 0 0 30px rgba(157, 0, 255, 0.3);
+  margin-top: 4px;
+}
+
 .guest-now-playing {
   padding: 12px;
   background: rgba(157, 0, 255, 0.08);
@@ -1988,6 +2003,18 @@ body {
 
   .app-logo:not(.host-logo) {
     height: 60px;
+  }
+
+  .app-logo.host-logo {
+    height: 180px !important;
+  }
+
+  .app-logo.host-logo ~ .logo-subtitle {
+    font-size: 20px;
+    padding: 8px 20px;
+    letter-spacing: 9px;
+    margin-top: -47px;
+    margin-bottom: 8px;
   }
 
   .app-header {
@@ -2726,6 +2753,13 @@ body {
 
   .app-logo.host-logo {
     height: 60px !important;
+  }
+
+  .app-logo.host-logo ~ .logo-subtitle {
+    font-size: 6px;
+    letter-spacing: 3px;
+    margin-top: -16px;
+    margin-bottom: 4px;
   }
 
   .mobile-warning-card,
