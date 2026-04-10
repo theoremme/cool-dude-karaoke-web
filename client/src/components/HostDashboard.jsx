@@ -46,7 +46,6 @@ const HostDashboard = () => {
   const { connectSocket, setPlaylist, setPlaybackState, setPlaybackMode: setContextPlaybackMode, clearLocal, items, currentItem } = usePlaylist();
   const [playlistLoading, setPlaylistLoading] = useState(true);
   const isMobile = useIsMobile();
-  const [showMobileWarning, setShowMobileWarning] = useState(true);
 
   const savedState = loadHostState(inviteCode);
   const [room, setRoom] = useState(null);
@@ -501,18 +500,6 @@ const HostDashboard = () => {
                 onClick={() => navigate('/')}
               >
                 Just go to the Lobby (keep room open)
-              </button>
-            </div>
-          </div>
-        )}
-        {showMobileWarning && (
-          <div className="mobile-warning-overlay">
-            <div className="mobile-warning-card">
-              <img src={logo} alt="Cool Dude Karaoke" className="auth-logo" />
-              <h2>Yo, dude. This hits different on desktop.</h2>
-              <p>The host dashboard is designed for a big screen. You can still use it here, but it's way better on a laptop or desktop.</p>
-              <button className="btn-neon" onClick={() => setShowMobileWarning(false)}>
-                I'll rough it
               </button>
             </div>
           </div>

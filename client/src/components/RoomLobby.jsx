@@ -13,7 +13,9 @@ const RoomLobby = () => {
   const [error, setError] = useState(null);
   const [activeRooms, setActiveRooms] = useState([]);
   const [roomsLoading, setRoomsLoading] = useState(true);
-  const [showMobileWarning, setShowMobileWarning] = useState(() => window.innerWidth <= 768);
+  const [showMobileWarning, setShowMobileWarning] = useState(() =>
+    window.innerWidth <= 768 && !sessionStorage.getItem('mobileDismissed')
+  );
 
   useEffect(() => {
     api.getMyRooms()
@@ -65,7 +67,7 @@ const RoomLobby = () => {
             <img src={logo} alt="Cool Dude Karaoke" className="auth-logo" />
             <h2>Yo, dude. This hits different on desktop.</h2>
             <p>The host dashboard is designed for a big screen. You can still use it here, but it's way better on a laptop or desktop.</p>
-            <button className="btn-neon" onClick={() => setShowMobileWarning(false)}>
+            <button className="btn-neon" onClick={() => { sessionStorage.setItem('mobileDismissed', '1'); setShowMobileWarning(false); }}>
               I'll rough it
             </button>
           </div>
