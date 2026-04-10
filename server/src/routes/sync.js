@@ -6,6 +6,7 @@ const {
   createSession,
   destroySession,
 } = require('../services/playlistSyncService');
+const { checkEmbeddable } = require('../services/youtubeService');
 
 const router = express.Router();
 
@@ -27,6 +28,13 @@ router.post('/connect', async (req, res) => {
   try {
     const items = await getPlaylistItems(playlistId);
     const info = await getPlaylistInfo(playlistId);
+
+    // Tag items with embeddable status
+    const videoIds = items.map(item => item.videoId);
+    const embeddableMap = await checkEmbeddable(videoIds);
+    for (const item of items) {
+      item.embeddable = embeddableMap[item.videoId] ?? false;
+    }
 
     const session = createSession(playlistId);
     items.forEach((item) => session.knownVideoIds.add(item.videoId));

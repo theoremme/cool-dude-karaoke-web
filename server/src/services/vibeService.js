@@ -21,7 +21,7 @@ async function generateSuggestions(theme) {
     throw new Error('Anthropic API key is not configured on the server.');
   }
 
-  const client = new Anthropic({ apiKey });
+  const client = new Anthropic({ apiKey, maxRetries: 3, timeout: 60000 });
   const prompt = DEFAULT_VIBE_PROMPT.replace('{{THEME}}', theme);
 
   const message = await client.messages.create({
