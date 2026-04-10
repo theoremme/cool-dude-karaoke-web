@@ -2079,8 +2079,9 @@ body {
 }
 
 /* ==================== AMPED DOWNLOAD BANNER ==================== */
+/* TODO: Re-enable banner when ready — just remove display:none below */
 .amped-banner {
-  display: flex;
+  display: none;
   flex-direction: column;
   align-items: center;
   gap: 6px;
