@@ -155,6 +155,7 @@ const HostDashboard = () => {
 
     socket.on('playlist-updated', (playlist) => {
       setPlaylist(playlist);
+      setPlaylistLoading(false);
     });
 
     socket.on('room-updated', (data) => {
@@ -184,10 +185,10 @@ const HostDashboard = () => {
         clearInterval(ampedCountdownRef.current);
         ampedCountdownRef.current = null;
       }
-      // When switching from amped to unplugged, pause so UI is accurate
-      // (web player hasn't actually started the video yet)
+      // When switching from amped to unplugged, pause and show playlist updating
       if (wasAmped && mode === 'unplugged') {
         setPlaybackState(items.indexOf(currentItem), false);
+        setPlaylistLoading(true);
       }
     });
 
@@ -520,6 +521,10 @@ const HostDashboard = () => {
               <span className="logo-subtitle logo-unplugged">UNPLUGGED</span>
             </div>
             <div className="mobile-header-line"></div>
+          </div>
+
+          <div className={`mode-badge mode-badge-${playbackMode}`}>
+            {playbackMode === 'amped' ? '⚡ Amped' : '🎸 Unplugged'}
           </div>
 
           {currentItem ? (

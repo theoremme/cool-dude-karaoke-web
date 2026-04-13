@@ -2236,6 +2236,24 @@ body {
   margin-top: 4px;
 }
 
+.mode-badge {
+  text-align: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 0;
+}
+
+.mode-badge-amped {
+  color: #00c8ff;
+}
+
+.mode-badge-unplugged {
+  color: #ff40ff;
+}
+
 .guest-now-playing {
   padding: 12px;
   background: rgba(157, 0, 255, 0.08);
