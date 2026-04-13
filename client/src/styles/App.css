@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 * {
   margin: 0;
@@ -1566,6 +1566,12 @@ body {
   z-index: 1;
   padding: 20px;
   overflow-y: auto;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .app.app-page {
@@ -1589,25 +1595,38 @@ body {
   width: 100%;
   max-width: 420px;
   box-shadow: 0 0 30px rgba(0, 200, 255, 0.1), 0 0 60px rgba(157, 0, 255, 0.05);
+  transition: height 0.2s ease;
 }
 
 .auth-card h2,
-.lobby-card h2,
-.join-card h2 {
-  font-family: 'Orbitron', sans-serif;
+.admin-card h2 {
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
   font-size: 20px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.02em;
   color: #ff40ff;
   text-shadow: 0 0 10px rgba(255, 64, 255, 0.5);
   text-align: center;
   margin-bottom: 24px;
 }
 
+.lobby-card h2,
+.join-card h2 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 0.02em;
+  color: #ff40ff;
+  text-shadow: 0 0 10px rgba(255, 64, 255, 0.5);
+  text-align: center;
+  margin-bottom: 16px;
+}
+
 .auth-logo {
   display: block;
-  margin: 0 auto 20px;
+  margin: 0 auto 40px;
   height: 200px;
+  min-height: 200px;
   max-width: 100%;
   object-fit: contain;
 }
@@ -1633,7 +1652,7 @@ body {
   margin-top: -52px;
   text-align: right;
   padding-right: 8%;
-  margin-bottom: 16px;
+  margin-bottom: 36px;
   position: relative;
   z-index: 1;
 }
@@ -1678,6 +1697,7 @@ body {
 }
 
 .active-rooms h2 {
+  font-family: 'Space Grotesk', sans-serif !important;
   font-size: 16px !important;
   margin-bottom: 12px !important;
 }
@@ -1728,7 +1748,7 @@ body {
 }
 
 .active-room-rejoin {
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 11px;
   font-weight: 700;
   color: #00c8ff;
@@ -1743,6 +1763,7 @@ body {
 
 .form-group label {
   display: block;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 12px;
   color: #888;
   margin-bottom: 6px;
@@ -1824,6 +1845,23 @@ body {
   color: #ff00ff;
 }
 
+.whitelist-message {
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+.whitelist-message a {
+  color: #00c8ff;
+  text-decoration: none;
+}
+
+.whitelist-message a:hover {
+  text-decoration: underline;
+}
+
 .auth-forgot {
   text-align: center;
   margin-top: 12px;
@@ -1850,7 +1888,10 @@ body {
   border: 1px solid rgba(255, 64, 255, 0.4);
   color: #ff40ff;
   cursor: pointer;
-  font-size: 13px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
   padding: 6px 14px;
   border-radius: 4px;
   transition: all 0.2s;
@@ -1873,6 +1914,7 @@ body {
   z-index: 1;
   padding: 20px;
   overflow-y: auto;
+  animation: fadeIn 0.3s ease-out;
 }
 
 .admin-card {
@@ -1885,27 +1927,16 @@ body {
   box-shadow: 0 0 30px rgba(0, 200, 255, 0.1), 0 0 60px rgba(157, 0, 255, 0.05);
 }
 
-.admin-card h2 {
-  font-family: 'Orbitron', sans-serif;
-  font-weight: 700;
-  font-size: 20px;
-  letter-spacing: 0.08em;
-  color: #ff40ff;
-  text-shadow: 0 0 10px rgba(255, 64, 255, 0.5);
-  text-align: center;
-  margin-bottom: 24px;
-}
-
 .admin-section {
   margin-bottom: 28px;
 }
 
 .admin-section h3 {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 13px;
-  font-weight: 700;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
   color: #00c8ff;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   margin-bottom: 12px;
   text-shadow: 0 0 6px rgba(0, 200, 255, 0.4);
@@ -2018,19 +2049,64 @@ body {
 }
 
 .admin-back {
-  text-align: center;
-  margin-top: 20px;
+  margin-top: 24px;
 }
 
 .admin-back a {
-  color: #cc00ff;
+  display: block;
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  border: 2px solid #00c8ff;
+  border-radius: 8px;
+  background: transparent;
+  color: #00c8ff;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-shadow: 0 0 8px rgba(0, 200, 255, 0.6);
+  box-shadow: 0 0 10px rgba(0, 200, 255, 0.2);
+  text-align: center;
   text-decoration: none;
-  font-size: 13px;
-  text-shadow: 0 0 6px rgba(157, 0, 255, 0.4);
 }
 
 .admin-back a:hover {
-  color: #ff00ff;
+  background: rgba(0, 200, 255, 0.1);
+  box-shadow: 0 0 20px rgba(0, 200, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.lobby-footer {
+  text-align: center;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 200, 255, 0.1);
+}
+
+.lobby-greeting {
+  color: #ede34d;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-align: center;
+  margin-bottom: 5px;
+}
+
+.btn-logout {
+  margin-left: 12px;
+  background: none;
+  border: none;
+  color: rgba(245, 111, 39, 0.5);
+  cursor: pointer;
+  font-size: 12px;
+  font-family: 'Space Grotesk', sans-serif;
+  transition: color 0.2s;
+}
+
+.btn-logout:hover {
+  color: #F56F27;
 }
 
 /* ==================== INVITE CODE ==================== */
@@ -2108,7 +2184,7 @@ body {
 
 .guest-welcome-room {
   display: block;
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
   font-size: 1.8rem;
   letter-spacing: 0.15em;
@@ -2122,7 +2198,7 @@ body {
 
 .guest-welcome-name {
   display: block;
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 500;
   font-size: 0.95rem;
   letter-spacing: 0.2em;
@@ -2302,7 +2378,10 @@ body {
   color: #00c8ff;
   padding: 6px 14px;
   border-radius: 4px;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all 0.2s;
   z-index: 10;
@@ -2323,7 +2402,10 @@ body {
   color: #F56F27;
   padding: 6px 14px;
   border-radius: 4px;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
   cursor: pointer;
   transition: all 0.2s;
   z-index: 10;
@@ -2363,7 +2445,7 @@ body {
 }
 
 .amped-banner-title {
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
   font-size: 16px;
   letter-spacing: 2px;
@@ -2377,7 +2459,7 @@ body {
 }
 
 .amped-banner-cta {
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -2425,7 +2507,7 @@ body {
 }
 
 .mobile-warning-card h2 {
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
   font-size: 1.2rem;
   letter-spacing: 0.05em;
@@ -2717,7 +2799,7 @@ body {
 }
 
 .closeout-room-name {
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 500;
   font-size: 1.1rem;
   letter-spacing: 0.15em;
@@ -2743,7 +2825,7 @@ body {
   border-radius: 20px;
   color: #00c8ff;
   font-size: 0.85rem;
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   letter-spacing: 0.1em;
 }
 
@@ -2766,7 +2848,7 @@ body {
 }
 
 .closeout-action-card h3 {
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -2854,7 +2936,7 @@ body {
 }
 
 .closeout-setlist h3 {
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.15em;
@@ -2887,7 +2969,7 @@ body {
 .closeout-song-num {
   color: #333;
   font-size: 0.8rem;
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   min-width: 24px;
   text-align: right;
 }
@@ -2938,7 +3020,7 @@ body {
   margin-top: 20px;
   padding: 14px 40px;
   font-size: 1rem;
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Space Grotesk', sans-serif;
   font-weight: 700;
   letter-spacing: 0.1em;
   flex-shrink: 0;

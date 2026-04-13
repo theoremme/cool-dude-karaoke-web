@@ -13,6 +13,7 @@ const AuthPage = () => {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [whitelisted, setWhitelisted] = useState(true);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,7 +31,11 @@ const AuthPage = () => {
         await register(email, password, name);
       }
     } catch (err) {
-      setError(err.message);
+      if (!isLogin && err.message.includes('Bowie')) {
+        setWhitelisted(false);
+      } else {
+        setError(err.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -41,6 +46,7 @@ const AuthPage = () => {
     setIsForgot(false);
     setError(null);
     setSuccess(null);
+    setWhitelisted(true);
   };
 
   return (
@@ -51,84 +57,98 @@ const AuthPage = () => {
             <img src={logo} alt="Cool Dude Karaoke" className="auth-logo" />
             <span className="logo-subtitle logo-unplugged">UNPLUGGED</span>
           </div>
-          <h2>
-            {isForgot ? 'Forgot Password' : isLogin ? 'Welcome Back' : 'Create Account'}
-          </h2>
+          {!whitelisted ? (
+            <>
+              <h2>Even Bowie Waited Backstage</h2>
+              <p className="whitelist-message">
+                Email <a href="mailto:cooldudekaraoke@gmail.com">cooldudekaraoke@gmail.com</a> to request access while we're in Beta.
+              </p>
+              <button className="btn-primary" onClick={() => switchMode(true)}>
+                Return to Login
+              </button>
+            </>
+          ) : (
+            <>
+              <h2>
+                {isForgot ? 'Forgot Password' : isLogin ? 'You had me at hello.' : 'Create Account'}
+              </h2>
 
-          {error && <div className="error-message">{error}</div>}
-          {success && <div className="success-message">{success}</div>}
+              {error && <div className="error-message">{error}</div>}
+              {success && <div className="success-message">{success}</div>}
 
-          {!success && (
-            <form onSubmit={handleSubmit}>
-              {!isLogin && !isForgot && (
-                <div className="form-group">
-                  <label>Name</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Your name"
-                  />
+              {!success && (
+                <form onSubmit={handleSubmit}>
+                  {!isLogin && !isForgot && (
+                    <div className="form-group">
+                      <label>Name</label>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Your name"
+                      />
+                    </div>
+                  )}
+                  <div className="form-group">
+                    <label>Email</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      required
+                    />
+                  </div>
+                  {!isForgot && (
+                    <div className="form-group">
+                      <label>Password</label>
+                      <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="At least 6 characters"
+                        required
+                        minLength={6}
+                      />
+                    </div>
+                  )}
+                  <button type="submit" className="btn-primary" disabled={loading}>
+                    {loading
+                      ? 'Please wait...'
+                      : isForgot
+                      ? 'Send Reset Link'
+                      : isLogin
+                      ? 'Sign In'
+                      : 'Create Account'}
+                  </button>
+                </form>
+              )}
+
+              {isLogin && !isForgot && (
+                <div className="auth-forgot">
+                  <button onClick={() => { setIsForgot(true); setError(null); setSuccess(null); }}>
+                    Forgot Password?
+                  </button>
                 </div>
               )}
-              <div className="form-group">
-                <label>Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  required
-                />
+
+              <div className="auth-switch">
+                {isForgot ? (
+                  <button onClick={() => switchMode(true)}>Back to Sign In</button>
+                ) : isLogin ? (
+                  <>
+                    {"Don't have an account? "}
+                    <button onClick={() => switchMode(false)}>Sign Up</button>
+                  </>
+                ) : (
+                  <>
+                    {'Already have an account? '}
+                    <button onClick={() => switchMode(true)}>Sign In</button>
+                  </>
+                )}
               </div>
-              {!isForgot && (
-                <div className="form-group">
-                  <label>Password</label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="At least 6 characters"
-                    required
-                    minLength={6}
-                  />
-                </div>
-              )}
-              <button type="submit" className="btn-primary" disabled={loading}>
-                {loading
-                  ? 'Please wait...'
-                  : isForgot
-                  ? 'Send Reset Link'
-                  : isLogin
-                  ? 'Sign In'
-                  : 'Create Account'}
-              </button>
-            </form>
+            </>
           )}
-
-          {isLogin && !isForgot && (
-            <div className="auth-forgot">
-              <button onClick={() => { setIsForgot(true); setError(null); setSuccess(null); }}>
-                Forgot Password?
-              </button>
-            </div>
-          )}
-
-          <div className="auth-switch">
-            {isForgot ? (
-              <button onClick={() => switchMode(true)}>Back to Sign In</button>
-            ) : isLogin ? (
-              <>
-                {"Don't have an account? "}
-                <button onClick={() => switchMode(false)}>Sign Up</button>
-              </>
-            ) : (
-              <>
-                {'Already have an account? '}
-                <button onClick={() => switchMode(true)}>Sign In</button>
-              </>
-            )}
-          </div>
         </div>
       </div>
     </div>

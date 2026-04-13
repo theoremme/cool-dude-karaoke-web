@@ -87,23 +87,8 @@ const RoomLobby = () => {
             <img src={logo} alt="Cool Dude Karaoke" className="auth-logo" />
             <span className="logo-subtitle logo-unplugged">UNPLUGGED</span>
           </div>
-          <div style={{ textAlign: 'center', marginBottom: 16 }}>
-            <span style={{ color: '#888', fontSize: 13 }}>
-              Welcome, {user?.name || user?.email}
-            </span>
-            <button
-              onClick={logout}
-              style={{
-                marginLeft: 12,
-                background: 'none',
-                border: 'none',
-                color: '#F56F27',
-                cursor: 'pointer',
-                fontSize: 12,
-              }}
-            >
-              Logout
-            </button>
+          <div className="lobby-greeting">
+            What's good, {user?.name || user?.email}?
           </div>
 
           {roomsLoading ? (
@@ -173,6 +158,12 @@ const RoomLobby = () => {
                 Join Room
               </button>
             </form>
+          </div>
+
+          <div className="lobby-footer">
+            <button onClick={logout} className="btn-logout">
+              Logout
+            </button>
           </div>
         </div>
 
