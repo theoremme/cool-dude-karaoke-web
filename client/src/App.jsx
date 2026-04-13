@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { PlaylistProvider } from './contexts/PlaylistContext';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import AuthPage from './components/AuthPage';
+import ResetPasswordPage from './components/ResetPasswordPage';
+import AdminPage from './components/AdminPage';
 import RoomLobby from './components/RoomLobby';
 import HostDashboard from './components/HostDashboard';
 import GuestView from './components/GuestView';
@@ -28,6 +30,18 @@ const AppRoutes = () => {
       <Route
         path="/login"
         element={user ? <Navigate to="/" replace /> : <AuthPage />}
+      />
+      <Route
+        path="/reset-password/:token"
+        element={user ? <Navigate to="/" replace /> : <ResetPasswordPage />}
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute>
+            <AdminPage />
+          </ProtectedRoute>
+        }
       />
       <Route
         path="/"

@@ -82,3 +82,59 @@ export const generateVibe = async (theme, exclusions = []) => {
 export const logout = () => {
   localStorage.removeItem('token');
 };
+
+// Password reset
+export const forgotPassword = async (email) => {
+  const res = await fetch('/api/auth/forgot-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to send reset email');
+  return data;
+};
+
+export const resetPassword = async (token, password) => {
+  const res = await fetch('/api/auth/reset-password', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, password }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to reset password');
+  return data;
+};
+
+// Admin
+export const getWhitelist = async () => {
+  const res = await fetch('/api/admin/whitelist', { headers: authHeaders() });
+  if (!res.ok) throw new Error('Failed to fetch whitelist');
+  return res.json();
+};
+
+export const addToWhitelist = async (email) => {
+  const res = await fetch('/api/admin/whitelist', {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify({ email }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to add to whitelist');
+  return data;
+};
+
+export const removeFromWhitelist = async (id) => {
+  const res = await fetch(`/api/admin/whitelist/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error('Failed to remove from whitelist');
+  return res.json();
+};
+
+export const getUsers = async () => {
+  const res = await fetch('/api/admin/users', { headers: authHeaders() });
+  if (!res.ok) throw new Error('Failed to fetch users');
+  return res.json();
+};

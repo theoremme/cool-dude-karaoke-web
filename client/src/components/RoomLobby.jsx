@@ -73,6 +73,14 @@ const RoomLobby = () => {
           </div>
         </div>
       )}
+      {user?.isAdmin && (
+        <button
+          onClick={() => navigate('/admin')}
+          className="btn-backstage"
+        >
+          Backstage
+        </button>
+      )}
       <div className="room-lobby">
         <div className="lobby-card">
           <div className="logo-wrap">

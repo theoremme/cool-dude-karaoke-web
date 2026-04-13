@@ -672,6 +672,16 @@ body {
   font-size: 13px;
 }
 
+.success-message {
+  background-color: #102b1a;
+  border: 1px solid #38a169;
+  color: #68d391;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
 /* ==================== SEARCH RESULTS ==================== */
 .search-results h2 {
   font-size: 16px;
@@ -1800,6 +1810,226 @@ body {
 }
 
 .auth-switch button:hover {
+  color: #ff00ff;
+}
+
+.auth-switch a {
+  color: #cc00ff;
+  text-decoration: none;
+  font-size: 13px;
+  text-shadow: 0 0 6px rgba(157, 0, 255, 0.4);
+}
+
+.auth-switch a:hover {
+  color: #ff00ff;
+}
+
+.auth-forgot {
+  text-align: center;
+  margin-top: 12px;
+}
+
+.auth-forgot button {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.auth-forgot button:hover {
+  color: #cc00ff;
+}
+
+.btn-backstage {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 10;
+  background: transparent;
+  border: 1px solid rgba(255, 64, 255, 0.4);
+  color: #ff40ff;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.btn-backstage:hover {
+  background: rgba(255, 64, 255, 0.1);
+  border-color: #ff40ff;
+  box-shadow: 0 0 10px rgba(255, 64, 255, 0.3);
+}
+
+/* ==================== ADMIN PAGE ==================== */
+.admin-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.admin-card {
+  background: rgba(10, 15, 30, 0.9);
+  border: 1px solid rgba(0, 200, 255, 0.2);
+  border-radius: 16px;
+  padding: 40px;
+  width: 100%;
+  max-width: 560px;
+  box-shadow: 0 0 30px rgba(0, 200, 255, 0.1), 0 0 60px rgba(157, 0, 255, 0.05);
+}
+
+.admin-card h2 {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  color: #ff40ff;
+  text-shadow: 0 0 10px rgba(255, 64, 255, 0.5);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.admin-section {
+  margin-bottom: 28px;
+}
+
+.admin-section h3 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #00c8ff;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  text-shadow: 0 0 6px rgba(0, 200, 255, 0.4);
+}
+
+.admin-add-form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.admin-add-form input {
+  flex: 1;
+  padding: 10px 14px;
+  font-size: 14px;
+  border: 1px solid rgba(0, 200, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(10, 15, 30, 0.8);
+  color: #e0e0e0;
+  outline: none;
+}
+
+.admin-add-form input:focus {
+  border-color: #cc00ff;
+}
+
+.btn-admin-add {
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  border: 1px solid #00c8ff;
+  border-radius: 8px;
+  background: transparent;
+  color: #00c8ff;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.btn-admin-add:hover {
+  background: rgba(0, 200, 255, 0.1);
+}
+
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: rgba(0, 200, 255, 0.04);
+  border: 1px solid rgba(0, 200, 255, 0.08);
+  border-radius: 8px;
+}
+
+.admin-list-email {
+  font-size: 14px;
+  color: #e0e0e0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.admin-user-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.admin-user-meta {
+  font-size: 11px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.btn-admin-remove {
+  font-size: 11px;
+  padding: 4px 10px;
+  border: 1px solid rgba(229, 62, 62, 0.4);
+  border-radius: 6px;
+  background: transparent;
+  color: #fc8181;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-admin-remove:hover {
+  background: rgba(229, 62, 62, 0.15);
+  border-color: #e53e3e;
+}
+
+.admin-empty {
+  font-size: 13px;
+  color: #666;
+  text-align: center;
+  padding: 16px;
+}
+
+.admin-loading {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.admin-back {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.admin-back a {
+  color: #cc00ff;
+  text-decoration: none;
+  font-size: 13px;
+  text-shadow: 0 0 6px rgba(157, 0, 255, 0.4);
+}
+
+.admin-back a:hover {
   color: #ff00ff;
 }
 

@@ -10,6 +10,7 @@ const roomRoutes = require('./src/routes/rooms');
 const youtubeRoutes = require('./src/routes/youtube');
 const vibeRoutes = require('./src/routes/vibe');
 const syncRoutes = require('./src/routes/sync');
+const adminRoutes = require('./src/routes/admin');
 const { setupSocketHandlers } = require('./src/services/socketService');
 
 const app = express();
@@ -40,6 +41,7 @@ app.use('/api/rooms', roomRoutes);
 app.use('/api/youtube', youtubeRoutes);
 app.use('/api/vibe', vibeRoutes);
 app.use('/api/sync', syncRoutes);
+app.use('/api/admin', adminRoutes);
 
 // WebSocket handlers
 setupSocketHandlers(io);
