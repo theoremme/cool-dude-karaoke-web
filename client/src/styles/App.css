@@ -1690,9 +1690,7 @@ body {
 }
 
 .active-rooms h2 {
-  font-family: 'Space Grotesk', sans-serif !important;
-  font-size: 16px !important;
-  margin-bottom: 12px !important;
+  display: none !important;
 }
 
 .active-rooms-list {
@@ -1881,10 +1879,7 @@ body {
   border: 1px solid rgba(255, 64, 255, 0.4);
   color: #ff40ff;
   cursor: pointer;
-  font-family: 'Space Grotesk', sans-serif;
   font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
   padding: 6px 14px;
   border-radius: 4px;
   transition: all 0.2s;
@@ -2371,10 +2366,7 @@ body {
   color: #00c8ff;
   padding: 6px 14px;
   border-radius: 4px;
-  font-family: 'Space Grotesk', sans-serif;
   font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
   cursor: pointer;
   transition: all 0.2s;
   z-index: 10;
@@ -2395,10 +2387,7 @@ body {
   color: #F56F27;
   padding: 6px 14px;
   border-radius: 4px;
-  font-family: 'Space Grotesk', sans-serif;
   font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
   cursor: pointer;
   transition: all 0.2s;
   z-index: 10;
