@@ -32,8 +32,12 @@ const AppRoutes = () => {
         element={user ? <Navigate to="/" replace /> : <AuthPage />}
       />
       <Route
+        path="/forgot-password"
+        element={<AuthPage startForgot />}
+      />
+      <Route
         path="/reset-password/:token"
-        element={user ? <Navigate to="/" replace /> : <ResetPasswordPage />}
+        element={<ResetPasswordPage />}
       />
       <Route
         path="/admin"

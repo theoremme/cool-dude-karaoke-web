@@ -3,10 +3,10 @@ import { useAuth } from '../hooks/useAuth';
 import * as api from '../services/api';
 import logo from '../assets/cool-dude-karaoke-logo-v2-nobg.png';
 
-const AuthPage = () => {
+const AuthPage = ({ startForgot = false }) => {
   const { login, register } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
-  const [isForgot, setIsForgot] = useState(false);
+  const [isLogin, setIsLogin] = useState(!startForgot);
+  const [isForgot, setIsForgot] = useState(startForgot);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -59,7 +59,7 @@ const AuthPage = () => {
           </div>
           {!whitelisted ? (
             <>
-              <h2>Even Bowie Waited Backstage</h2>
+              <h2>Even Bowie waited backstage...</h2>
               <p className="whitelist-message">
                 Email <a href="mailto:cooldudekaraoke@gmail.com">cooldudekaraoke@gmail.com</a> to request access while we're in Beta.
               </p>
