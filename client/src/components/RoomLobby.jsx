@@ -1,8 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import * as api from '../services/api';
 import logo from '../assets/cool-dude-karaoke-logo-v2-nobg.png';
+
+const GREETINGS = [
+  { text: "What's good,", end: "?" },
+  { text: "'Sup,", end: "?" },
+  { text: "What's poppin',", end: "?" },
+  { text: "Yo, what up", end: "?" },
+  { text: "Oh snap, it's", end: "!" },
+];
 
 const RoomLobby = () => {
   const { user, logout } = useAuth();
@@ -16,6 +24,7 @@ const RoomLobby = () => {
   const [showMobileWarning, setShowMobileWarning] = useState(() =>
     window.innerWidth <= 768 && !sessionStorage.getItem('mobileDismissed')
   );
+  const greeting = useMemo(() => GREETINGS[Math.floor(Math.random() * GREETINGS.length)], []);
 
   useEffect(() => {
     api.getMyRooms()
@@ -88,7 +97,7 @@ const RoomLobby = () => {
             <span className="logo-subtitle logo-unplugged">UNPLUGGED</span>
           </div>
           <div className="lobby-greeting">
-            What's good, {user?.name || user?.email}?
+            {greeting.text} {user?.name || user?.email}{greeting.end}
           </div>
 
           {roomsLoading ? (

@@ -1612,14 +1612,7 @@ body {
 
 .lobby-card h2,
 .join-card h2 {
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 600;
-  font-size: 18px;
-  letter-spacing: 0.02em;
-  color: #ff40ff;
-  text-shadow: 0 0 10px rgba(255, 64, 255, 0.5);
-  text-align: center;
-  margin-bottom: 16px;
+  display: none;
 }
 
 .auth-logo {
@@ -2084,14 +2077,14 @@ body {
 }
 
 .lobby-greeting {
-  color: #ede34d;
+  color: #ff40ff;
   font-family: 'Space Grotesk', sans-serif;
-  font-size: 16px;
+  font-size: 22px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.02em;
   text-align: center;
-  margin-bottom: 5px;
+  text-shadow: 0 0 10px rgba(255, 64, 255, 0.5);
+  margin-bottom: 30px;
 }
 
 .btn-logout {
