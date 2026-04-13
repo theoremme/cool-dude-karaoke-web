@@ -18,13 +18,14 @@ function pickRandom(arr) {
 }
 
 const SearchResults = ({ results }) => {
-  const { addItem, items } = usePlaylist();
+  const { addItem, items, playbackMode } = usePlaylist();
   const [addedIds, setAddedIds] = useState(new Set());
 
-  // Filter out non-embeddable videos entirely
+  // Show all videos in amped mode, filter non-embeddable in unplugged
   const sortedResults = useMemo(() => {
+    if (playbackMode === 'amped') return results;
     return results.filter((video) => video.embeddable !== false);
-  }, [results]);
+  }, [results, playbackMode]);
 
   if (results.length === 0) {
     return null;

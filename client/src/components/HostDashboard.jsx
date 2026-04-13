@@ -398,11 +398,11 @@ const HostDashboard = () => {
     });
   };
 
-  // Consolidate members by name (handles page refreshes creating duplicate entries)
+  // Consolidate members by userId or name (handles page refreshes and dual Amped+Unplugged logins)
   const consolidatedMembers = useMemo(() => {
     const byName = new Map();
     for (const m of members) {
-      const key = m.guestName || m.id;
+      const key = m.userId || m.guestName || m.id;
       const existing = byName.get(key);
       if (!existing) {
         byName.set(key, { ...m });
@@ -523,21 +523,12 @@ const HostDashboard = () => {
           </div>
 
           {currentItem ? (
-            <div className="guest-now-playing" onClick={() => setMobilePlayerOpen(true)} style={{ cursor: 'pointer' }}>
+            <div className="guest-now-playing">
               <div className="now-playing-label">NOW PLAYING</div>
               <div className="now-playing-title">{currentItem.title}</div>
               <div className="now-playing-channel">{currentItem.channelName}</div>
-              <div className="mobile-play-hint">Tap to watch</div>
             </div>
-          ) : (
-            <div className="guest-now-playing" onClick={() => { if (items.length > 0) { setMobilePlayerOpen(true); } }} style={{ cursor: items.length > 0 ? 'pointer' : 'default' }}>
-              {items.length > 0 ? (
-                <>
-                  <div className="mobile-play-hint">Tap to play</div>
-                </>
-              ) : null}
-            </div>
-          )}
+          ) : null}
 
           <PlaylistQueue loading={playlistLoading} playbackMode={playbackMode} />
 

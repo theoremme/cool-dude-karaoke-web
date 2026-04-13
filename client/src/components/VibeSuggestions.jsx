@@ -76,7 +76,7 @@ const SongVersions = ({ song, onBack }) => {
 };
 
 const VibeSuggestionItem = ({ song, index, onShowVersions }) => {
-  const { addItem, items } = usePlaylist();
+  const { addItem, items, playbackMode } = usePlaylist();
   const [searching, setSearching] = useState(false);
   const [added, setAdded] = useState(false);
 
@@ -86,7 +86,7 @@ const VibeSuggestionItem = ({ song, index, onShowVersions }) => {
       const query = `${song.title} ${song.artist} karaoke`;
       const results = await searchYouTube(query);
       if (results && results.length > 0) {
-        const best = results.find(r => r.embeddable !== false) || results[0];
+        const best = playbackMode === 'amped' ? results[0] : (results.find(r => r.embeddable !== false) || results[0]);
         addItem(best);
         setAdded(true);
       }
@@ -121,7 +121,7 @@ const VibeSuggestionItem = ({ song, index, onShowVersions }) => {
 };
 
 const VibeSuggestions = ({ theme, suggestions, onRequestMore, loadingMore }) => {
-  const { addItem } = usePlaylist();
+  const { addItem, playbackMode } = usePlaylist();
   const [viewingSong, setViewingSong] = useState(null);
   const [addingAll, setAddingAll] = useState(false);
   const [addAllProgress, setAddAllProgress] = useState(0);
@@ -136,7 +136,7 @@ const VibeSuggestions = ({ theme, suggestions, onRequestMore, loadingMore }) => 
         const query = `${song.title} ${song.artist} karaoke`;
         const results = await searchYouTube(query);
         if (results && results.length > 0) {
-          const best = results.find(r => r.embeddable !== false) || results[0];
+          const best = playbackMode === 'amped' ? results[0] : (results.find(r => r.embeddable !== false) || results[0]);
           addItem(best);
         }
       } catch (e) {}
