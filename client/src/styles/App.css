@@ -1658,7 +1658,16 @@ body {
   margin-top: -62px;
 }
 
-.logo-unplugged {
+.app-logo.host-logo ~ .logo-amped {
+  font-size: 36px;
+  padding-right: 15%;
+  padding-top: 8px;
+  letter-spacing: 12px;
+  margin-top: -60px;
+}
+
+.logo-unplugged,
+.logo-amped {
   color: #00ffff;
   background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.7) 0%, transparent 70%);
   padding: 8px 20px;
@@ -2254,6 +2263,11 @@ body {
   color: #ff40ff;
 }
 
+.mode-badge-large {
+  font-size: 22px;
+  padding: 16px 0;
+}
+
 .mode-badge-disconnected {
   color: #ff4466;
   animation: pulse 1s ease-in-out infinite;
@@ -2336,6 +2350,14 @@ body {
     padding: 8px 20px;
     letter-spacing: 9px;
     margin-top: -47px;
+    margin-bottom: 8px;
+  }
+
+  .app-logo.host-logo ~ .logo-amped {
+    font-size: 24px;
+    padding-right: 17%;
+    letter-spacing: 9px;
+    margin-top: -50px;
     margin-bottom: 8px;
   }
 

@@ -10,7 +10,7 @@ const RECONNECT_GRACE_MS = 30000; // 30 seconds to reconnect
 // Track Amped host sockets per room for disconnect detection
 // Map<roomId, { socketId, userId, timeoutId? }>
 const ampedHosts = new Map();
-const AMPED_FALLBACK_MS = 30000; // 30 seconds before fallback to unplugged
+const AMPED_FALLBACK_MS = 10000; // 10 seconds before fallback to unplugged
 
 // Auto-close inactive rooms to free WebSocket connections and save costs
 const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes

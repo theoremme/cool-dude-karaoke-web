@@ -518,16 +518,16 @@ const HostDashboard = () => {
             </div>
             <div className="logo-wrap">
               <img src={logo} alt="Cool Dude Karaoke" className="app-logo host-logo" style={{ height: 180, marginBottom: 0 }} />
-              <span className="logo-subtitle logo-unplugged">UNPLUGGED</span>
+              <span className={`logo-subtitle ${playbackMode === 'amped' ? 'logo-amped' : 'logo-unplugged'}`}>{playbackMode === 'amped' ? 'AMPED' : 'UNPLUGGED'}</span>
             </div>
             <div className="mobile-header-line"></div>
           </div>
 
-          <div className={`mode-badge ${ampedDisconnected ? 'mode-badge-disconnected' : `mode-badge-${playbackMode}`}`}>
-            {ampedDisconnected
-              ? `⚡ Amped disconnected — switching in ${ampedDisconnected.secondsLeft}s`
-              : playbackMode === 'amped' ? '⚡ Amped' : '🎸 Unplugged'}
-          </div>
+          {ampedDisconnected && (
+            <div className="mode-badge mode-badge-disconnected">
+              Amped disconnected — switching in {ampedDisconnected.secondsLeft}s
+            </div>
+          )}
 
           {currentItem ? (
             <div className="guest-now-playing">
@@ -600,17 +600,12 @@ const HostDashboard = () => {
         <button className="btn-lobby" onClick={() => navigate('/')}>Lobby</button>
         <div className="logo-wrap">
           <img src={logo} alt="Cool Dude Karaoke" className="app-logo host-logo" style={{ height: 240 }} />
-          <span className="logo-subtitle logo-unplugged">UNPLUGGED</span>
+          <span className={`logo-subtitle ${playbackMode === 'amped' ? 'logo-amped' : 'logo-unplugged'}`}>{playbackMode === 'amped' ? 'AMPED' : 'UNPLUGGED'}</span>
         </div>
         <button className="btn-leave-room" onClick={() => setShowLeaveModal(true)}>
           Bail
         </button>
       </header>
-      <div className={`mode-badge ${ampedDisconnected ? 'mode-badge-disconnected' : `mode-badge-${playbackMode}`}`}>
-        {ampedDisconnected
-          ? `⚡ Amped disconnected — switching in ${ampedDisconnected.secondsLeft}s`
-          : playbackMode === 'amped' ? '⚡ Amped' : '🎸 Unplugged'}
-      </div>
 
       {playbackMode !== 'amped' && (
         <a href="https://github.com/theoremme/cool-dude-karaoke/releases/latest" target="_blank" rel="noopener noreferrer" className="amped-banner">
@@ -622,6 +617,11 @@ const HostDashboard = () => {
 
       <div className="app-body">
         <div className="panel-left">
+          {ampedDisconnected && (
+            <div className="mode-badge mode-badge-large mode-badge-disconnected">
+              Amped disconnected — switching in {ampedDisconnected.secondsLeft}s
+            </div>
+          )}
           <VideoPlayer isHost={true} playbackController={playbackController} popoutManager={popoutManager} playbackMode={playbackMode} socket={socket} roomId={room?.id} ampedDisconnected={ampedDisconnected} onSwitchToWeb={() => {
             if (socket && room) {
               socket.emit('amped-disconnect', { roomId: room.id });

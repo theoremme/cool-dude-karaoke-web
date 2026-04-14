@@ -79,16 +79,7 @@ const VideoPlayer = ({ isHost = false, playbackController, popoutManager, playba
   }, [popoutManager, currentItem, playSong]);
 
   if (!currentItem) {
-    return (
-      <div className="video-player">
-        <div className="player-placeholder">
-          <div className="placeholder-content">
-            <div className="placeholder-icon">♪</div>
-            <p>Add songs and hit play to start the party!</p>
-          </div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   // Amped disconnected — desktop app dropped, countdown to fallback
