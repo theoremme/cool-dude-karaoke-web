@@ -523,8 +523,10 @@ const HostDashboard = () => {
             <div className="mobile-header-line"></div>
           </div>
 
-          <div className={`mode-badge mode-badge-${playbackMode}`}>
-            {playbackMode === 'amped' ? '⚡ Amped' : '🎸 Unplugged'}
+          <div className={`mode-badge ${ampedDisconnected ? 'mode-badge-disconnected' : `mode-badge-${playbackMode}`}`}>
+            {ampedDisconnected
+              ? `⚡ Amped disconnected — switching in ${ampedDisconnected.secondsLeft}s`
+              : playbackMode === 'amped' ? '⚡ Amped' : '🎸 Unplugged'}
           </div>
 
           {currentItem ? (
@@ -604,6 +606,11 @@ const HostDashboard = () => {
           Bail
         </button>
       </header>
+      <div className={`mode-badge ${ampedDisconnected ? 'mode-badge-disconnected' : `mode-badge-${playbackMode}`}`}>
+        {ampedDisconnected
+          ? `⚡ Amped disconnected — switching in ${ampedDisconnected.secondsLeft}s`
+          : playbackMode === 'amped' ? '⚡ Amped' : '🎸 Unplugged'}
+      </div>
 
       {playbackMode !== 'amped' && (
         <a href="https://github.com/theoremme/cool-dude-karaoke/releases/latest" target="_blank" rel="noopener noreferrer" className="amped-banner">

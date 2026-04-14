@@ -2254,6 +2254,16 @@ body {
   color: #ff40ff;
 }
 
+.mode-badge-disconnected {
+  color: #ff4466;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 .guest-now-playing {
   padding: 12px;
   background: rgba(157, 0, 255, 0.08);
