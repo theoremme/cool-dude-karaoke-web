@@ -403,7 +403,7 @@ const HostDashboard = () => {
   const consolidatedMembers = useMemo(() => {
     const byName = new Map();
     for (const m of members) {
-      const key = m.userId || m.guestName || m.id;
+      const key = (m.userId && m.userId !== 'null') ? m.userId : (m.guestName || m.id);
       const existing = byName.get(key);
       if (!existing) {
         byName.set(key, { ...m });

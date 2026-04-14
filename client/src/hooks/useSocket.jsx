@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 
-export function useSocket() {
+export function useSocket({ guest = false } = {}) {
   const socketRef = useRef(null);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token = guest ? null : localStorage.getItem('token');
     const socket = io({
       transports: ['websocket', 'polling'],
       auth: token ? { token } : undefined,

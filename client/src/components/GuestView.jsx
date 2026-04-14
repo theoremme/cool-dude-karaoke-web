@@ -29,9 +29,9 @@ function loadGuestState(inviteCode) {
 
 const GuestView = () => {
   const { inviteCode } = useParams();
-  const { socket, isConnected } = useSocket();
+  const { socket, isConnected } = useSocket({ guest: true });
   const navigate = useNavigate();
-  const { addItem, addItems, items, currentItem, connectSocket, setPlaylist, setPlaybackState, clearLocal } = usePlaylist();
+  const { addItem, addItems, items, currentItem, connectSocket, setPlaylist, setPlaybackState, clearLocal, setPlaybackMode: setContextPlaybackMode } = usePlaylist();
   const [playlistLoading, setPlaylistLoading] = useState(true);
   const isMobile = useIsMobile();
 
@@ -47,7 +47,11 @@ const GuestView = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [roomError, setRoomError] = useState(null);
-  const [playbackMode, setPlaybackMode] = useState(null);
+  const [playbackMode, _setPlaybackMode] = useState(null);
+  const setPlaybackMode = (mode) => {
+    _setPlaybackMode(mode);
+    setContextPlaybackMode(mode);
+  };
 
   // Fetch room info
   // Clear stale playlist on mount
@@ -84,7 +88,10 @@ const GuestView = () => {
     });
 
     socket.on('room-updated', (data) => {
-      if (data.room) setRoom(data.room);
+      if (data.room) {
+        setRoom(data.room);
+        if (data.room.playbackMode) setPlaybackMode(data.room.playbackMode);
+      }
       if (data.playlist) {
         setPlaylist(data.playlist);
         setPlaylistLoading(false);
@@ -93,7 +100,11 @@ const GuestView = () => {
 
     socket.on('playback-sync', ({ currentIndex, isPlaying, mode }) => {
       setPlaybackState(currentIndex, isPlaying);
-      setPlaybackMode(mode || null);
+      if (mode) setPlaybackMode(mode);
+    });
+
+    socket.on('mode-changed', ({ mode }) => {
+      setPlaybackMode(mode);
     });
 
     socket.on('room-closed', (data) => {
@@ -118,6 +129,7 @@ const GuestView = () => {
       socket.off('playlist-updated');
       socket.off('room-updated');
       socket.off('playback-sync');
+      socket.off('mode-changed');
       socket.off('room-closed');
       socket.off('error');
     };
@@ -288,7 +300,7 @@ const GuestView = () => {
             </div>
           )}
 
-          <PlaylistQueue guestMode loading={playlistLoading} />
+          <PlaylistQueue guestMode loading={playlistLoading} playbackMode={playbackMode} />
 
           <div className="search-section">
             <SearchBar
@@ -370,7 +382,7 @@ const GuestView = () => {
               <div className="now-playing-channel">{currentItem.channelName}</div>
             </div>
           )}
-          <PlaylistQueue guestMode loading={playlistLoading} />
+          <PlaylistQueue guestMode loading={playlistLoading} playbackMode={playbackMode} />
         </div>
       </div>
     </div>
