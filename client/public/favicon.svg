@@ -1,15 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="8" fill="#0a0a0f"/>
-  <g transform="translate(32,32)">
-    <!-- Outer diamond -->
-    <rect x="-22" y="-22" width="44" height="44" rx="4" transform="rotate(45)" fill="#0d3a4a"/>
-    <!-- Inner glow -->
-    <rect x="-14" y="-14" width="28" height="28" rx="2" transform="rotate(45)" fill="#0e5a6e"/>
-    <!-- Cross bars -->
-    <rect x="-3" y="-20" width="6" height="40" rx="1" fill="#00c8ff" opacity="0.8"/>
-    <rect x="-20" y="-3" width="40" height="6" rx="1" fill="#00c8ff" opacity="0.8"/>
-    <!-- Center glow -->
-    <circle cx="0" cy="0" r="6" fill="#fff" opacity="0.9"/>
-    <circle cx="0" cy="0" r="4" fill="#00c8ff"/>
+  <rect width="64" height="64" rx="12" fill="#0a0f1e"/>
+  <g fill="#00c8ff">
+    <!-- Note head -->
+    <ellipse cx="22" cy="46" rx="10" ry="7.5" transform="rotate(-15 22 46)"/>
+    <!-- Stem -->
+    <rect x="30" y="12" width="4" height="36" rx="2"/>
+    <!-- Flag -->
+    <path d="M34 12 C34 12 46 16 46 26 C46 32 38 30 34 24 Z"/>
   </g>
 </svg>

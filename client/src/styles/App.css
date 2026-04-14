@@ -1730,6 +1730,7 @@ body {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  text-align: left;
 }
 
 .active-room-name {
@@ -1892,6 +1893,15 @@ body {
   padding: 6px 14px;
   border-radius: 4px;
   transition: all 0.2s;
+}
+
+@media (max-width: 768px) {
+  .btn-backstage {
+    font-size: 10px;
+    padding: 4px 8px;
+    top: 8px;
+    right: 8px;
+  }
 }
 
 .btn-backstage:hover {
@@ -2299,6 +2309,30 @@ body {
   html, body, .app, .app-page {
     max-width: 100vw;
     overflow-x: hidden;
+  }
+
+  .auth-card,
+  .lobby-card,
+  .join-card {
+    padding: 28px 20px;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  .lobby-card .auth-logo,
+  .auth-card .auth-logo {
+    height: 140px;
+    min-height: 140px;
+    margin-bottom: 24px;
+  }
+
+  .lobby-card .logo-subtitle,
+  .auth-card .logo-subtitle {
+    font-size: 16px;
+    letter-spacing: 8px;
+    margin-top: -59px;
+    padding-right: 3%;
+    margin-bottom: 28px;
   }
 
   .app-body {

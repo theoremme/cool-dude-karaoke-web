@@ -176,6 +176,7 @@ const GuestView = () => {
       roomId: room.id,
       guestName: guestName.trim(),
     });
+    joinedSocketRef.current = true;
     setHasJoined(true);
   };
 

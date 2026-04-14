@@ -165,18 +165,22 @@ function setupSocketHandlers(io) {
           socket.data.userId = userId;
         }
 
-        // Reuse existing member record for the same userId, or create new
+        // Reuse existing member record for the same userId or guestName
         let member;
         if (socket.data.userId) {
           member = await prisma.roomMember.findFirst({
             where: { roomId, userId: socket.data.userId },
           });
-          if (member) {
-            await prisma.roomMember.update({
-              where: { id: member.id },
-              data: { lastSeen: new Date() },
-            });
-          }
+        } else if (guestName) {
+          member = await prisma.roomMember.findFirst({
+            where: { roomId, guestName, userId: null },
+          });
+        }
+        if (member) {
+          await prisma.roomMember.update({
+            where: { id: member.id },
+            data: { lastSeen: new Date() },
+          });
         }
         if (!member) {
           member = await prisma.roomMember.create({
@@ -251,22 +255,35 @@ function setupSocketHandlers(io) {
             data: { lastSeen: new Date() },
           });
         } else {
-          // Member was cleaned up, create a new one
-          const member = await prisma.roomMember.create({
-            data: {
-              roomId,
-              userId: socket.data.userId || null,
-              guestName: guestName || null,
-            },
-          });
+          // Member was cleaned up — check if another record exists for this userId
+          let member;
+          if (socket.data.userId) {
+            member = await prisma.roomMember.findFirst({
+              where: { roomId, userId: socket.data.userId },
+            });
+            if (member) {
+              await prisma.roomMember.update({
+                where: { id: member.id },
+                data: { lastSeen: new Date() },
+              });
+            }
+          }
+          if (!member) {
+            member = await prisma.roomMember.create({
+              data: {
+                roomId,
+                userId: socket.data.userId || null,
+                guestName: guestName || null,
+              },
+            });
+            socket.to(roomId).emit('user-joined', {
+              id: member.id,
+              guestName,
+              userId: socket.data.userId,
+              joinedAt: member.joinedAt,
+            });
+          }
           socket.data.memberId = member.id;
-
-          socket.to(roomId).emit('user-joined', {
-            id: member.id,
-            guestName,
-            userId: socket.data.userId,
-            joinedAt: member.joinedAt,
-          });
         }
 
         // Send fresh room state
@@ -688,6 +705,18 @@ function setupSocketHandlers(io) {
         const timeoutId = setTimeout(async () => {
           disconnectedUsers.delete(memberId);
           try {
+            // Check if this user still has another active socket in the room
+            if (userId) {
+              const sockets = await io.in(roomId).fetchSockets();
+              const stillConnected = sockets.some(
+                (s) => s.id !== socket.id && s.data.userId === userId
+              );
+              if (stillConnected) {
+                console.log(`[Disconnect] User ${userId} still has another socket in room ${roomId}, skipping member cleanup`);
+                return;
+              }
+            }
+
             await prisma.roomMember.delete({
               where: { id: memberId },
             }).catch(() => {});
