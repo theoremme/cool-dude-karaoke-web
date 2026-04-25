@@ -79,7 +79,7 @@ body {
 /* ==================== HEADER ==================== */
 .app-header {
   background: #000000;
-  padding: 10px 30px;
+  padding: clamp(4px, 1vh, 10px) 30px;
   text-align: center;
   position: relative;
   z-index: 1;
@@ -91,7 +91,7 @@ body {
 }
 
 .app-logo {
-  height: 270px;
+  height: clamp(120px, 22vh, 270px);
   object-fit: contain;
 }
 
@@ -141,12 +141,13 @@ body {
 }
 
 .panel-right {
-  width: 380px;
+  width: clamp(280px, 25vw, 380px);
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   border-left: 1px solid rgba(0, 200, 255, 0.15);
   background: rgba(0, 0, 0, 0.9);
+  overflow: hidden;
 }
 
 .search-section {
@@ -855,6 +856,7 @@ body {
 /* ==================== PLAYLIST QUEUE ==================== */
 .playlist-queue {
   flex: 1;
+  min-height: 200px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -1141,8 +1143,8 @@ body {
 
 /* ==================== PLAYLIST SYNC ==================== */
 .playlist-sync {
-  flex-shrink: 0;
-  padding: 12px 16px;
+  flex-shrink: 1;
+  padding: clamp(8px, 1vh, 12px) 16px;
   border-top: 1px solid rgba(0, 200, 255, 0.15);
   background: rgba(0, 0, 0, 0.4);
 }
@@ -1454,22 +1456,29 @@ body {
 
 /* ==================== QR CODE ==================== */
 .qr-code-section {
-  padding: 16px;
+  padding: clamp(6px, 1vh, 16px);
   background: rgba(0, 0, 0, 0.6);
   border-bottom: 1px solid rgba(0, 200, 255, 0.15);
   text-align: center;
+  flex-shrink: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .qr-code-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: clamp(2px, 0.4vh, 8px);
+  min-height: 0;
+  flex-shrink: 1;
 }
 
 .qr-title {
   color: #ff40ff;
-  font-size: 18px;
+  font-size: clamp(13px, 1.5vh, 18px);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -1479,18 +1488,31 @@ body {
 
 .qr-subtitle {
   color: #ccc;
-  font-size: 14px;
+  font-size: clamp(11px, 1.2vh, 14px);
   font-style: italic;
-  margin: -8px 0 4px;
+  margin: clamp(-4px, -0.5vh, -8px) 0 clamp(2px, 0.3vh, 4px);
 }
 
 .qr-code-wrapper {
-  padding: 12px;
+  padding: clamp(4px, 0.8vh, 8px);
   background: white;
-  border-radius: 10px;
+  border-radius: clamp(6px, 1vh, 10px);
   box-shadow: 0 0 25px rgba(0, 255, 255, 0.5);
   position: relative;
   animation: qrPulse 3s ease-in-out infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.qr-code-wrapper canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
 }
 
 
@@ -1506,12 +1528,12 @@ body {
 .qr-info {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .qr-scan-label {
   color: #888;
-  font-size: 11px;
+  font-size: clamp(9px, 1vh, 11px);
   text-transform: uppercase;
   letter-spacing: 1px;
   margin: 0;
@@ -1519,14 +1541,14 @@ body {
 
 .qr-room-name {
   color: #fff;
-  font-size: 16px;
+  font-size: clamp(12px, 1.4vh, 16px);
   font-weight: 700;
   margin: 0;
 }
 
 .qr-invite-code {
   color: #9d4edd;
-  font-size: 14px;
+  font-size: clamp(11px, 1.2vh, 14px);
   margin: 0;
 }
 
@@ -1534,7 +1556,7 @@ body {
   font-family: monospace;
   color: #00ffff;
   font-weight: 700;
-  font-size: 20px;
+  font-size: clamp(14px, 1.8vh, 20px);
   letter-spacing: 3px;
   text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
 }
@@ -1549,8 +1571,17 @@ body {
 
 .qr-actions {
   display: flex;
-  gap: 8px;
-  margin-top: 12px;
+  gap: clamp(4px, 0.5vw, 8px);
+  margin-top: clamp(4px, 0.8vh, 12px);
+  flex-wrap: wrap;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.qr-actions .btn-small {
+  font-size: clamp(9px, 1vh, 12px);
+  padding: clamp(3px, 0.5vh, 6px) clamp(6px, 1vw, 12px);
+  white-space: nowrap;
 }
 
 /* ==================== AUTH & ROOM PAGES ==================== */
@@ -1588,6 +1619,8 @@ body {
 .auth-card,
 .lobby-card,
 .join-card {
+  --logo-h: calc(200px * var(--logo-scale, 1));  /* Lobby: 200px base */
+  zoom: var(--logo-scale, 1);
   background: rgba(10, 15, 30, 0.9);
   border: 1px solid rgba(0, 200, 255, 0.2);
   border-radius: 16px;
@@ -1595,7 +1628,6 @@ body {
   width: 100%;
   max-width: 420px;
   box-shadow: 0 0 30px rgba(0, 200, 255, 0.1), 0 0 60px rgba(157, 0, 255, 0.05);
-  transition: height 0.2s ease;
 }
 
 .auth-card h2,
@@ -1619,7 +1651,6 @@ body {
   display: block;
   margin: 0 auto 40px;
   height: 200px;
-  min-height: 200px;
   max-width: 100%;
   object-fit: contain;
 }
@@ -1631,10 +1662,21 @@ body {
   text-align: center;
 }
 
+/* Logo-wrap — zoom scales the entire logo+subtitle as one unit */
+.app-header .logo-wrap,
+.guest-header .logo-wrap {
+  zoom: var(--logo-scale, 1);
+}
+
 .logo-wrap .auth-logo {
   margin-bottom: 0;
 }
 
+/*
+ * Logo subtitle — UNPLUGGED or AMPED.
+ * Lobby: fixed design values, zoom on card handles scaling.
+ * Room: --logo-h ratios override (see .host-logo ~ rules below).
+ */
 .logo-subtitle {
   display: block;
   font-family: 'Orbitron', sans-serif;
@@ -1650,20 +1692,24 @@ body {
   z-index: 1;
 }
 
-/* Scale subtitle proportionally when next to larger host-logo */
-.app-logo.host-logo ~ .logo-subtitle {
+/* UNPLUGGED — fixed design values, zoom on logo-wrap handles scaling */
+.host-dashboard .logo-unplugged {
   font-size: 27px;
-  padding: 11px 28px;
   letter-spacing: 12px;
-  margin-top: -62px;
+  margin-top: -59px;
+  margin-bottom: 20px;
+  padding-right: 0;
+  transform: rotate(-6deg) translateX(-26px);
 }
 
-.app-logo.host-logo ~ .logo-amped {
+/* AMPED — fixed design values, zoom on logo-wrap handles scaling */
+.host-dashboard .logo-amped {
   font-size: 36px;
-  padding-right: 15%;
-  padding-top: 8px;
-  letter-spacing: 12px;
-  margin-top: -60px;
+  letter-spacing: 11px;
+  margin-top: -62px;
+  margin-bottom: 9px;
+  padding-right: 17%;
+  transform: rotate(-7deg);
 }
 
 .logo-unplugged,
@@ -2314,25 +2360,9 @@ body {
   .auth-card,
   .lobby-card,
   .join-card {
-    padding: 28px 20px;
+    /* zoom handles scaling — no mobile size overrides needed */
     box-sizing: border-box;
     text-align: center;
-  }
-
-  .lobby-card .auth-logo,
-  .auth-card .auth-logo {
-    height: 140px;
-    min-height: 140px;
-    margin-bottom: 24px;
-  }
-
-  .lobby-card .logo-subtitle,
-  .auth-card .logo-subtitle {
-    font-size: 16px;
-    letter-spacing: 8px;
-    margin-top: -59px;
-    padding-right: 3%;
-    margin-bottom: 28px;
   }
 
   .app-body {
@@ -2375,24 +2405,26 @@ body {
     height: 60px;
   }
 
-  .app-logo.host-logo {
+  /* Mobile host logo — smaller design size, zoom still scales it */
+  .guest-header .host-logo {
     height: 180px !important;
   }
 
-  .app-logo.host-logo ~ .logo-subtitle {
+  .guest-header .logo-unplugged {
     font-size: 20px;
-    padding: 8px 20px;
     letter-spacing: 9px;
-    margin-top: -47px;
+    margin-top: -44px;
     margin-bottom: 8px;
+    transform: rotate(-6deg) translateX(-5px);
   }
 
-  .app-logo.host-logo ~ .logo-amped {
-    font-size: 24px;
-    padding-right: 17%;
+  .guest-header .logo-amped {
+    font-size: 28px;
     letter-spacing: 9px;
-    margin-top: -50px;
+    margin-top: -48px;
     margin-bottom: 8px;
+    padding-right: 15%;
+    transform: rotate(-7deg);
   }
 
   .app-header {
@@ -2713,10 +2745,13 @@ body {
 /* ==================== GUEST PANEL (QR flip card) ==================== */
 .qr-flipper {
   perspective: 600px;
-  width: 200px;
-  height: 180px;
+  width: clamp(80px, 14vh, 160px);
+  height: clamp(80px, 14vh, 160px);
+  min-width: 60px;
+  min-height: 60px;
   position: relative;
   transform-style: preserve-3d;
+  flex-shrink: 1;
 }
 
 .qr-flipped .qr-code-wrapper {
@@ -2746,9 +2781,9 @@ body {
   background: #0d1117;
   border-radius: 10px;
   box-shadow: 0 0 25px rgba(255, 64, 255, 0.4);
-  padding: 16px;
+  padding: 10px;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: flex-start;
   overflow-y: auto;
 }
@@ -2763,12 +2798,13 @@ body {
 
 .guest-overlay-title {
   color: #ff40ff;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
   text-shadow: 0 0 10px rgba(255, 64, 255, 0.5);
-  margin-bottom: 10px;
+  margin: 0 0 6px;
+  text-align: center;
   flex-shrink: 0;
 }
 
@@ -2782,34 +2818,36 @@ body {
 }
 
 .guest-toggle-btn {
-  color: #ff40ff;
-  min-width: 120px;
+  color: #ff40ff !important;
   text-align: center;
 }
 
 .guest-panel-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 5px 4px;
-  border-radius: 6px;
-  gap: 8px;
+  padding: 2px 0;
+  gap: 6px;
 }
 
 .guest-panel-name {
   color: #ddd;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   min-width: 0;
+  flex: 1 1 50%;
 }
 
 .guest-panel-time {
-  color: #ccc;
-  font-size: 0.7rem;
+  color: #888;
+  font-size: 0.65rem;
   white-space: nowrap;
-  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 0 1 50%;
+  text-align: right;
 }
 
 .guest-panel-item-left {
@@ -3113,8 +3151,6 @@ body {
 
 /* Mobile landscape — prevent layout breakage */
 @media (max-height: 500px) and (orientation: landscape) {
-  .guest-header img,
-  .auth-logo,
   .mobile-warning-card img {
     height: 50px !important;
     margin-bottom: 4px !important;
@@ -3130,19 +3166,14 @@ body {
   }
 
   .app-logo.host-logo {
-    height: 60px !important;
+    /* let clamp() handle scaling */
   }
 
   .app-logo.host-logo ~ .logo-subtitle {
-    font-size: 6px;
-    letter-spacing: 3px;
-    margin-top: -16px;
-    margin-bottom: 4px;
+    /* let clamp() handle scaling */
   }
 
-  .mobile-warning-card,
-  .auth-card,
-  .join-card {
+  .mobile-warning-card {
     max-height: 90vh;
     overflow-y: auto;
     padding: 16px;
@@ -3165,13 +3196,11 @@ body {
   }
 
   .qr-code-wrapper canvas {
-    width: 80px !important;
-    height: 80px !important;
+    /* let clamp() handle scaling */
   }
 
   .qr-flipper {
-    width: 120px;
-    height: 110px;
+    /* let clamp() handle scaling */
   }
 
   .closeout-logo {

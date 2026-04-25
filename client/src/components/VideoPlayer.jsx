@@ -302,7 +302,6 @@ const VideoPlayer = ({ isHost = false, playbackController, popoutManager, playba
         <div className="player-container">
           {currentItem.embeddable !== false ? (
             <YouTubeEmbed
-              key={currentItem.videoId}
               ref={ytRef}
               videoId={currentItem.videoId}
               onReady={handleReady}

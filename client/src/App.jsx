@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { PlaylistProvider } from './contexts/PlaylistContext';
 import { AuthProvider, useAuth } from './hooks/useAuth';
@@ -20,7 +20,21 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+function useLogoScale(designHeight = 240, minScale = 0.35, maxScale = 1) {
+  useEffect(() => {
+    const update = () => {
+      const vh = window.innerHeight;
+      const scale = Math.min(maxScale, Math.max(minScale, (vh * 0.25) / designHeight));
+      document.documentElement.style.setProperty('--logo-scale', scale);
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [designHeight, minScale, maxScale]);
+}
+
 const AppRoutes = () => {
+  useLogoScale();
   const { user, loading } = useAuth();
 
   if (loading) return null;

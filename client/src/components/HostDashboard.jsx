@@ -10,6 +10,7 @@ function useIsMobile(breakpoint = 768) {
   }, [breakpoint]);
   return isMobile;
 }
+
 import SearchBar from './SearchBar';
 import SearchResults from './SearchResults';
 import VibeSuggestions from './VibeSuggestions';
@@ -517,7 +518,7 @@ const HostDashboard = () => {
               </button>
             </div>
             <div className="logo-wrap">
-              <img src={logo} alt="Cool Dude Karaoke" className="app-logo host-logo" style={{ height: 180, marginBottom: 0 }} />
+              <img src={logo} alt="Cool Dude Karaoke" className="app-logo host-logo" />
               <span className={`logo-subtitle ${playbackMode === 'amped' ? 'logo-amped' : 'logo-unplugged'}`}>{playbackMode === 'amped' ? 'AMPED' : 'UNPLUGGED'}</span>
             </div>
             <div className="mobile-header-line"></div>
@@ -599,7 +600,7 @@ const HostDashboard = () => {
       <header className="app-header">
         <button className="btn-lobby" onClick={() => navigate('/')}>Lobby</button>
         <div className="logo-wrap">
-          <img src={logo} alt="Cool Dude Karaoke" className="app-logo host-logo" style={{ height: 240 }} />
+          <img src={logo} alt="Cool Dude Karaoke" className="app-logo host-logo" />
           <span className={`logo-subtitle ${playbackMode === 'amped' ? 'logo-amped' : 'logo-unplugged'}`}>{playbackMode === 'amped' ? 'AMPED' : 'UNPLUGGED'}</span>
         </div>
         <button className="btn-leave-room" onClick={() => setShowLeaveModal(true)}>
