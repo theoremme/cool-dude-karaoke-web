@@ -84,9 +84,9 @@ const YouTubeEmbed = forwardRef(({ videoId, controls = true, onEnded, onPlay, on
         playerVars: {
           autoplay: 1,
           controls: controls ? 1 : 0,
-          modestbranding: 1,
           rel: 0,
           playsinline: 1,
+          origin: window.location.origin,
         },
         events: {
           onReady: () => {

@@ -321,13 +321,6 @@ const VideoPlayer = ({ isHost = false, playbackController, popoutManager, playba
               </div>
             </div>
           )}
-          <button
-            className="btn-popout-overlay"
-            onClick={handleTogglePopout}
-            title={popoutManager?.isOpen() ? 'Close popout' : 'Open in popout window'}
-          >
-            ⧉
-          </button>
           {loading && currentItem.embeddable !== false && (
             <div style={{
               position: 'absolute', inset: 0,

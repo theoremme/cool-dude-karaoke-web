@@ -1067,14 +1067,6 @@ body {
   text-shadow: 0 0 6px rgba(157, 0, 255, 0.5);
 }
 
-.queue-thumbnail {
-  width: 48px;
-  height: 27px;
-  object-fit: cover;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
 .queue-item-info {
   flex: 1;
   min-width: 0;
