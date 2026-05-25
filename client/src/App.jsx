@@ -11,6 +11,7 @@ import GuestView from './components/GuestView';
 import CloseoutPage from './components/CloseoutPage';
 import PopoutPlayer from './components/PopoutPlayer';
 import PlayerLoading from './components/PlayerLoading';
+import PrivacyPolicy from './components/PrivacyPolicy';
 import './styles/App.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -91,6 +92,7 @@ const AppRoutes = () => {
         path="/closeout/:inviteCode"
         element={<CloseoutPage />}
       />
+      <Route path="/privacy" element={<PrivacyPolicy />} />
       <Route path="/player" element={<PopoutPlayer />} />
       <Route path="/player-loading" element={<PlayerLoading />} />
     </Routes>
