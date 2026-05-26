@@ -13,6 +13,7 @@ import PopoutPlayer from './components/PopoutPlayer';
 import PlayerLoading from './components/PlayerLoading';
 import PrivacyPolicy from './components/PrivacyPolicy';
 import TermsOfService from './components/TermsOfService';
+import Footer from './components/Footer';
 import './styles/App.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -42,6 +43,7 @@ const AppRoutes = () => {
   if (loading) return null;
 
   return (
+    <>
     <Routes>
       <Route
         path="/login"
@@ -98,6 +100,8 @@ const AppRoutes = () => {
       <Route path="/player" element={<PopoutPlayer />} />
       <Route path="/player-loading" element={<PlayerLoading />} />
     </Routes>
+    <Footer />
+    </>
   );
 };
 
