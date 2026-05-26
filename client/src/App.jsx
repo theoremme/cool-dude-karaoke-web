@@ -12,6 +12,7 @@ import CloseoutPage from './components/CloseoutPage';
 import PopoutPlayer from './components/PopoutPlayer';
 import PlayerLoading from './components/PlayerLoading';
 import PrivacyPolicy from './components/PrivacyPolicy';
+import TermsOfService from './components/TermsOfService';
 import './styles/App.css';
 
 const ProtectedRoute = ({ children }) => {
@@ -93,6 +94,7 @@ const AppRoutes = () => {
         element={<CloseoutPage />}
       />
       <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
       <Route path="/player" element={<PopoutPlayer />} />
       <Route path="/player-loading" element={<PlayerLoading />} />
     </Routes>
