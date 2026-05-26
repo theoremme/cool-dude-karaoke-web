@@ -38,6 +38,8 @@ const YouTubeEmbed = forwardRef(({ videoId, controls = true, onEnded, onPlay, on
   const playerRef = useRef(null);
   const playerReady = useRef(false);
   const callbacksRef = useRef({});
+  const loadingVideo = useRef(false);
+  const seenBuffering = useRef(false);
 
   // Keep callbacks ref updated without triggering effects
   callbacksRef.current = { onEnded, onPlay, onPause, onEmbedBlocked, onError, onReady };
@@ -66,6 +68,8 @@ const YouTubeEmbed = forwardRef(({ videoId, controls = true, onEnded, onPlay, on
 
       // Player already exists — just load new video
       if (playerRef.current && playerReady.current) {
+        loadingVideo.current = true;
+        seenBuffering.current = false;
         playerRef.current.loadVideoById(videoId);
         // Player is already initialized, signal ready immediately
         callbacksRef.current.onReady?.();
@@ -86,7 +90,6 @@ const YouTubeEmbed = forwardRef(({ videoId, controls = true, onEnded, onPlay, on
           controls: controls ? 1 : 0,
           rel: 0,
           playsinline: 1,
-          origin: window.location.origin,
         },
         events: {
           onReady: () => {
@@ -95,6 +98,16 @@ const YouTubeEmbed = forwardRef(({ videoId, controls = true, onEnded, onPlay, on
           },
           onStateChange: (e) => {
             const { PLAYING, PAUSED, ENDED } = window.YT.PlayerState;
+            // During loadVideoById transition, suppress all events until
+            // PLAYING fires after BUFFERING (the real playback start)
+            if (loadingVideo.current) {
+              if (e.data === 3) seenBuffering.current = true;
+              if (e.data === PLAYING && seenBuffering.current) {
+                loadingVideo.current = false;
+                callbacksRef.current.onPlay?.();
+              }
+              return;
+            }
             if (e.data === PLAYING) callbacksRef.current.onPlay?.();
             else if (e.data === PAUSED) callbacksRef.current.onPause?.();
             else if (e.data === ENDED) callbacksRef.current.onEnded?.();
